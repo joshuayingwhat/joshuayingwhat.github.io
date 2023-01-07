@@ -8,7 +8,7 @@
 # Site settings
 title: Joshuayingwhat
 brief-intro: Front-end Dev Engineer
-baseurl: "" # the subpath of your site, e.g. /blog
+baseurl: "/Joshuayingwhat" # the subpath of your site, e.g. /blog
 url: "https://JoshuaYingWhatEgr.github.io" # the base hostname & protocol for your site
 
 permalink: /:year/:month/:day/:title/
