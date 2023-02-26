@@ -5,8 +5,8 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Sun, 26 Feb 2023 22:30:03 +0800</pubDate>
-    <lastBuildDate>Sun, 26 Feb 2023 22:30:03 +0800</lastBuildDate>
+    <pubDate>Sun, 26 Feb 2023 22:31:56 +0800</pubDate>
+    <lastBuildDate>Sun, 26 Feb 2023 22:31:56 +0800</lastBuildDate>
     <generator>Jekyll v4.3.1</generator>
     
       <item>
@@ -64,7 +64,7 @@
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 &lt;h1 id=&quot;小结&quot;&gt;小结&lt;/h1&gt;
 
-本文主要分析了如何开发一个摩天轮动画，包含摩天轮车厢的布局和旋转动画部分，复习了一点点三角函数的知识，创作出了非常棒的动画效果~
+增加对指针的理解和认识.
 </description>
         <pubDate>Sun, 15 Oct 2017 00:00:00 +0800</pubDate>
         <link>http://localhost:4000/2017/10/15/point_array__array_point/</link>
