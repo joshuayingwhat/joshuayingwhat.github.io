@@ -5,9 +5,9 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Sun, 26 Feb 2023 22:41:15 +0800</pubDate>
-    <lastBuildDate>Sun, 26 Feb 2023 22:41:15 +0800</lastBuildDate>
-    <generator>Jekyll v4.3.1</generator>
+    <pubDate>Sun, 02 Apr 2023 12:48:02 +0800</pubDate>
+    <lastBuildDate>Sun, 02 Apr 2023 12:48:02 +0800</lastBuildDate>
+    <generator>Jekyll v4.0.0</generator>
     
       <item>
         <title>指针数组和数组指针基础</title>
@@ -22,7 +22,7 @@
   int &lt;em&gt;parr[]在这行语句中[]的优先级最高所以parr先和[]结合成为一个数组,外面的&lt;/em&gt;表示这个数组里面存放的是指针。
 
 如下代码:
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;cp&quot;&gt;#include&lt;/span&gt; &lt;span class=&quot;cpf&quot;&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
 &lt;/span&gt;&lt;span class=&quot;cm&quot;&gt;/**
  * 指针数组 首先他是一个数组 里面存放着指针
  * 
@@ -47,7 +47,7 @@
   int (&lt;em&gt;parr)[]在C语言中()比[]的优先级要高所以paar先和&lt;/em&gt;结合成为一个指针所以它是一个指针然后在和外面的[]结合表示这个指针是指向一个数组的。
 
 如下代码:
-&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;cp&quot;&gt;#include&lt;/span&gt; &lt;span class=&quot;cpf&quot;&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class=&quot;cp&quot;&gt;
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;  &lt;span class=&quot;cp&quot;&gt;#include &amp;lt;stdio.h&amp;gt;
 &lt;/span&gt;
 &lt;span class=&quot;cm&quot;&gt;/**
  * 数组指针 首先他是一个指针 指向一个数组
