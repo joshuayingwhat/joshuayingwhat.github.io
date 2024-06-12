@@ -5,8 +5,8 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Wed, 12 Jun 2024 15:08:22 +0800</pubDate>
-    <lastBuildDate>Wed, 12 Jun 2024 15:08:22 +0800</lastBuildDate>
+    <pubDate>Wed, 12 Jun 2024 17:29:34 +0800</pubDate>
+    <lastBuildDate>Wed, 12 Jun 2024 17:29:34 +0800</lastBuildDate>
     <generator>Jekyll v4.3.3</generator>
     
       <item>
@@ -43,6 +43,9 @@ ipc通信机制的一般套路
 &lt;/ol&gt;
 
 &lt;img src=&quot;https://cdn.jsdelivr.net/gh/joshuayingwhat/blog_resource@0.0.1/bctest.c.png&quot; alt=&quot;&quot; /&gt;
+
+同时SVC_MGR_GET_SERVICE也会被调用
+通过handle发送数据，这个时候就会导致server从驱动中读取到数据
 </description>
         <pubDate>Wed, 12 Jun 2024 00:00:00 +0800</pubDate>
         <link>http://localhost:4000/2024/06/12/binder%E6%A1%86%E6%9E%B6%E7%B3%BB%E7%BB%9F%E5%88%86%E6%9E%90/</link>

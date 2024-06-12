@@ -162,6 +162,7 @@
             <ul id="markdown-toc">
   <li><a href="#rpc通信远程函数调用" id="markdown-toc-rpc通信远程函数调用"><strong>rpc通信:远程函数调用</strong></a></li>
   <li><a href="#clientbctestsvcmgr_lookup" id="markdown-toc-clientbctestsvcmgr_lookup"><strong>client（bctest.svcmgr_lookup）</strong></a></li>
+  <li><a href="#servicemanager" id="markdown-toc-servicemanager"><strong>servicemanager</strong></a></li>
 </ul>
 
 <p>整个binder框架有2部分组成一个是ipc通信一个是rpc通讯.
@@ -191,6 +192,14 @@ ipc通信机制的一般套路</p>
 </ol>
 
 <p><img src="https://cdn.jsdelivr.net/gh/joshuayingwhat/blog_resource@0.0.1/bctest.c.png" alt="" /></p>
+
+<p>同时SVC_MGR_GET_SERVICE也会被调用
+通过handle发送数据，这个时候就会导致server从驱动中读取到数据</p>
+
+<h3 id="servicemanager"><strong>servicemanager</strong></h3>
+<p>整个binder运行起来首先需要将servicemanager运行起来。主要做两件事一个是注册服务，另一个是查询服务。</p>
+
+<p>b进程注册服务那么首先需要运行servicemanager，所以servicemanager需要做一下操作</p>
 
         </article>
         <hr>
