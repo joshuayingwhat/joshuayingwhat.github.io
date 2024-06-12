@@ -6,15 +6,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>科学上网注册与使用 ChatGPT</title>
-    <meta name="description" content="手把手教你如何在国内科学注册chatGPT流程比较简单，主要分以下3步：  科学上网  注册ChatGPT  手机号接收验证码">
+    <title>一:Binder系统框架分析</title>
+    <meta name="description" content="  rpc通信:远程函数调用  client（bctest.svcmgr_lookup）整个binder框架有2部分组成一个是ipc通信一个是rpc通讯.ipc通信机制的一般套路源：a(client)目的：b  (server)b向servicemanager注册xx服务a向servicemanager查询xx服...">
 
     <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
     <link rel="stylesheet" href="/css/main.css ">
-    <link rel="canonical" href="http://localhost:4000/2023/04/08/chatGPT/">
+    <link rel="canonical" href="http://localhost:4000/2024/06/12/binder%E6%A1%86%E6%9E%B6%E7%B3%BB%E7%BB%9F%E5%88%86%E6%9E%90/">
     <link rel="alternate" type="application/rss+xml" title="joshuayingwhat" href="http://localhost:4000/feed.xml ">
 
 
@@ -106,15 +106,14 @@
 
         <div class="page clearfix" post>
     <div class="left">
-        <h1>科学上网注册与使用 ChatGPT</h1>
+        <h1>一:Binder系统框架分析</h1>
         <div class="label">
 
             <div class="label-card">
-                <i class="fa fa-calendar"></i>2023-04-08
+                <i class="fa fa-calendar"></i>2024-06-12
             </div>
 
             <div class="label-card">
-                <i class="fa fa-user"></i>HyG
                 
             </div>
 
@@ -131,7 +130,7 @@
   <i class="fa fa-th-list"></i>
   
     
-        <a href="/category/#AI" title="Category: AI" rel="category">AI</a>
+        <a href="/category/#android" title="Category: android" rel="category">android</a>
     
   
 
@@ -148,11 +147,8 @@
   <i class="fa fa-tags"></i>
   
     
-        <!--a href="/tag/#AI" title="Tag: AI" rel="tag">AI</a-->
-        <a href="/tag/#AI" title="Tag: AI" rel="tag">AI</a>&nbsp;
-    
-        <!--a href="/tag/#%E7%A7%91%E5%AD%A6%E4%B8%8A%E7%BD%91" title="Tag: 科学上网" rel="tag">科学上网</a-->
-        <a href="/tag/#科学上网" title="Tag: 科学上网" rel="tag">科学上网</a>
+        <!--a href="/tag/#binder" title="Tag: binder" rel="tag">binder</a-->
+        <a href="/tag/#binder" title="Tag: binder" rel="tag">binder</a>
     
   
 
@@ -164,54 +160,37 @@
         <hr>
         <article itemscope itemtype="http://schema.org/BlogPosting">
             <ul id="markdown-toc">
-  <li><a href="#科学上网" id="markdown-toc-科学上网">科学上网</a></li>
-  <li><a href="#注册chatgpt" id="markdown-toc-注册chatgpt">注册ChatGPT</a></li>
-  <li><a href="#手机号接收验证码" id="markdown-toc-手机号接收验证码">手机号接收验证码</a></li>
-  <li><a href="#使用chatgpt" id="markdown-toc-使用chatgpt">使用ChatGPT</a></li>
+  <li><a href="#rpc通信远程函数调用" id="markdown-toc-rpc通信远程函数调用"><strong>rpc通信:远程函数调用</strong></a></li>
+  <li><a href="#clientbctestsvcmgr_lookup" id="markdown-toc-clientbctestsvcmgr_lookup"><strong>client（bctest.svcmgr_lookup）</strong></a></li>
 </ul>
 
-<p>手把手教你如何在国内科学注册chatGPT</p>
+<p>整个binder框架有2部分组成一个是ipc通信一个是rpc通讯.
+ipc通信机制的一般套路</p>
 
-<p>流程比较简单，主要分以下3步：</p>
+<p>源：a(client)</p>
 
-<ul>
-  <li>科学上网</li>
-  <li>注册ChatGPT</li>
-  <li>手机号接收验证码</li>
-</ul>
-
-<h1 id="科学上网">科学上网</h1>
-
-<p>如果您已经可以科学上网了，则可以跳过这1步。</p>
-
-<p>科学上网不仅是可以用来使用chatGPT，也可以看ins、油管、face、电报、推特等，所以常备一个科学上网的账号是非常必要的。这里推荐 shadowsocks 服务，我个人已经使用了4年了，比较稳定，价格合理，包年仅一百元左右，续费更便宜。注册链接 <a href="https://portal.shadowsocks.au/aff.php?aff=22354">https://portal.shadowsocks.au/aff.php?aff=22354</a></p>
-
-<p><img src="https://cdn.jsdelivr.net/gh/Gaohaoyang/pics/pics/1.png" alt="" /></p>
-
-<h1 id="注册chatgpt">注册ChatGPT</h1>
-
-<p>首先打开科学上网，访问 chatGPT 官网注册 <a href="https://chat.openai.com/auth/login">https://chat.openai.com/auth/login</a>
-填写邮箱，验证邮箱，到手机号输入界面，这里需要一个海外手机号，如果没有请看第3步</p>
-
-<p><img src="https://cdn.jsdelivr.net/gh/Gaohaoyang/pics/pics/2.png" alt="" /></p>
-
-<h1 id="手机号接收验证码">手机号接收验证码</h1>
-
-<p><a href="https://sms-activate.org/">https://sms-activate.org/</a></p>
-
+<p>目的：b  (server)</p>
 <ol>
-  <li>给接码平台充值，在右上角，可以使用支付宝或银联卡充值</li>
-  <li>在左边选择 openai 再选择一个国家，建议选择印度尼西亚，比较便宜，不过印度更稳定</li>
-  <li>回到首页获取号码，回到ChatGPT里填写，等待接收验证码，然后填写到 ChatGPT 注册界面，完成注册</li>
+<li>b向servicemanager注册xx服务</li>
+<li>a向servicemanager查询xx服务，得到一个handle（handle就是指向的进程b）</li>
+</ol>
+<p>数据本身:数据就是一个buffer，char[512] buffer</p>
+
+<h3 id="rpc通信远程函数调用"><strong>rpc通信:远程函数调用</strong></h3>
+<ol>
+<li>调用哪一个函数：server的函数编个号</li>
+
+<li>传给它什么参数：传递server的参数就放在ipc的buffer中</li>
+
+<li>返回值：同样也是通过buffer传给client</li>
+</ol>
+<h3 id="clientbctestsvcmgr_lookup"><strong>client（bctest.svcmgr_lookup）</strong></h3>
+<ol>
+<li>open驱动</li>
+<li>获取服务：向servicemanager查询服务得到一个指向目标进程的handle（这个handle就是目标进程server），target = 0 （表示目标进程是servicemanager）name就是client想要调用的服务 （函数）</li>
 </ol>
 
-<p><img src="https://cdn.jsdelivr.net/gh/Gaohaoyang/pics/pics/3.png" alt="" /></p>
-
-<h1 id="使用chatgpt">使用ChatGPT</h1>
-
-<p>注册完成后，重新登录，可以使用 ChatGPT 了</p>
-
-<p><img src="https://cdn.jsdelivr.net/gh/Gaohaoyang/pics/pics/4.png" alt="" /></p>
+<p><img src="https://cdn.jsdelivr.net/gh/joshuayingwhat/blog_resource@0.0.1/bctest.c.png" alt="" /></p>
 
         </article>
         <hr>
@@ -223,6 +202,8 @@
         
         
                 
+                
+        
         
                 
                 
@@ -230,8 +211,6 @@
         
         
         
-        
-                
         
                 
                 
@@ -241,13 +220,11 @@
             <div class="post-recent">
     <div class="pre">
         
-        <p><strong>上一篇</strong> <a href="/2017/10/15/point_array__array_point/">指针数组和数组指针基础</a></p>
+        <p><strong>上一篇</strong> <a href="/2023/04/08/chatGPT/">科学上网注册与使用 ChatGPT</a></p>
         
     </div>
     <div class="nex">
 
-        
-        <p><strong>下一篇</strong> <a href="/2024/06/12/binder%E6%A1%86%E6%9E%B6%E7%B3%BB%E7%BB%9F%E5%88%86%E6%9E%90/">一:Binder系统框架分析</a></p>
         
     </div>
 </div>

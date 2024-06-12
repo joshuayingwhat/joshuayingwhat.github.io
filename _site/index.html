@@ -113,6 +113,96 @@
       
       <li>
         <h2>
+          <a class="post-link" href="/2024/06/12/binder%E6%A1%86%E6%9E%B6%E7%B3%BB%E7%BB%9F%E5%88%86%E6%9E%90/">一:Binder系统框架分析</a>
+        </h2>
+        <div class="label">
+          <div class="label-card">
+            <i class="fa fa-calendar"></i>2024-06-12
+          </div>
+          <div class="label-card">
+            
+          </div>
+          <div class="label-card">
+            
+          </div>
+
+          <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#android" title="Category: android" rel="category">android</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+          </div>
+
+          <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#binder" title="Tag: binder" rel="tag">binder</a>
+    
+  
+
+</span>
+
+          </div>
+        </div>
+        <div class="excerpt">
+          <ul id="markdown-toc">
+  <li><a href="#rpc通信远程函数调用" id="markdown-toc-rpc通信远程函数调用"><strong>rpc通信:远程函数调用</strong></a></li>
+  <li><a href="#clientbctestsvcmgr_lookup" id="markdown-toc-clientbctestsvcmgr_lookup"><strong>client（bctest.svcmgr_lookup）</strong></a></li>
+</ul>
+
+<p>整个binder框架有2部分组成一个是ipc通信一个是rpc通讯.
+ipc通信机制的一般套路</p>
+
+<p>源：a(client)</p>
+
+<p>目的：b  (server)</p>
+<ol>
+<li>b向servicemanager注册xx服务</li>
+<li>a向servicemanager查询xx服务，得到一个handle（handle就是指向的进程b）</li>
+</ol>
+<p>数据本身:数据就是一个buffer，char[512] buffer</p>
+
+<h3 id="rpc通信远程函数调用"><strong>rpc通信:远程函数调用</strong></h3>
+<ol>
+<li>调用哪一个函数：server的函数编个号</li>
+
+<li>传给它什么参数：传递server的参数就放在ipc的buffer中</li>
+
+<li>返回值：同样也是通过buffer传给client</li>
+</ol>
+<h3 id="clientbctestsvcmgr_lookup"><strong>client（bctest.svcmgr_lookup）</strong></h3>
+<ol>
+<li>open驱动</li>
+<li>获取服务：向servicemanager查询服务得到一个指向目标进程的handle（这个handle就是目标进程server），target = 0 （表示目标进程是servicemanager）name就是client想要调用的服务 （函数）</li>
+</ol>
+
+<p><img src="https://cdn.jsdelivr.net/gh/joshuayingwhat/blog_resource@0.0.1/bctest.c.png" alt="" /></p>
+
+        </div>
+        <div class="read-all">
+          <a href="/2024/06/12/binder%E6%A1%86%E6%9E%B6%E7%B3%BB%E7%BB%9F%E5%88%86%E6%9E%90/"><i class="fa fa-newspaper-o"></i>Read All</a>
+        </div>
+        <hr>
+      </li>
+      
+      <li>
+        <h2>
           <a class="post-link" href="/2023/04/08/chatGPT/">科学上网注册与使用 ChatGPT</a>
         </h2>
         <div class="label">
@@ -269,6 +359,8 @@
         </div>
         <ul class="content-ul" recent>
           
+          <li><a href="/2024/06/12/binder%E6%A1%86%E6%9E%B6%E7%B3%BB%E7%BB%9F%E5%88%86%E6%9E%90/">一:Binder系统框架分析</a></li>
+          
           <li><a href="/2023/04/08/chatGPT/">科学上网注册与使用 ChatGPT</a></li>
           
           <li><a href="/2017/10/15/point_array__array_point/">指针数组和数组指针基础</a></li>
@@ -304,6 +396,16 @@
             </a>
           </li>
           
+          <li>
+            <a href="/category/#android" class="categories-list-item"
+              cate="android">
+              <span class="name">
+                android
+              </span>
+              <span class="badge">1</span>
+            </a>
+          </li>
+          
         </ul>
       </div>
       <!-- 其他div框放到这里 -->
@@ -322,6 +424,8 @@
             style="font-size: 9pt; color: #999;">AI</a>
                   <a href="/tag/#科学上网"
             style="font-size: 9pt; color: #999;">科学上网</a>
+                  <a href="/tag/#binder"
+            style="font-size: 9pt; color: #999;">binder</a>
             
         </div>
       </div>
