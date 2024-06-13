@@ -163,6 +163,11 @@
   <li><a href="#rpc通信远程函数调用" id="markdown-toc-rpc通信远程函数调用"><strong>rpc通信:远程函数调用</strong></a></li>
   <li><a href="#clientbctestsvcmgr_lookup" id="markdown-toc-clientbctestsvcmgr_lookup"><strong>client（bctest.svcmgr_lookup）</strong></a></li>
   <li><a href="#servicemanager" id="markdown-toc-servicemanager"><strong>servicemanager</strong></a></li>
+  <li><a href="#server进程bctest" id="markdown-toc-server进程bctest"><strong>server进程（bctest）</strong></a>    <ul>
+      <li><a href="#注册服务的过程" id="markdown-toc-注册服务的过程"><strong>注册服务的过程:</strong></a></li>
+    </ul>
+  </li>
+  <li><a href="#binder_call分析" id="markdown-toc-binder_call分析"><strong>binder_call分析</strong></a></li>
 </ul>
 
 <p>整个binder框架有2部分组成一个是ipc通信一个是rpc通讯.
@@ -199,7 +204,287 @@ ipc通信机制的一般套路</p>
 <h3 id="servicemanager"><strong>servicemanager</strong></h3>
 <p>整个binder运行起来首先需要将servicemanager运行起来。主要做两件事一个是注册服务，另一个是查询服务。</p>
 
-<p>b进程注册服务那么首先需要运行servicemanager，所以servicemanager需要做一下操作</p>
+<p>b进程注册服务那么首先需要运行servicemanager，所以servicemanager需要做一下操作&lt;/br&gt;
+1.open驱动
+<img src="https://github.com/joshuayingwhat/blog_resource/blob/main/sercice_manager.c.png?raw=true" alt="" /></p>
+
+<p>2.servicemanager本身需要告诉驱动程序它就是servicemanager
+<img src="https://github.com/joshuayingwhat/blog_resource/blob/main/service_manager1.c.png?raw=true" alt="" /></p>
+
+<p>3.while(true) 一个死循环，当有数据的时候才操作执行，没有数据的时候休眠。</p>
+
+<p>3.1 读驱动获取数据
+<img src="https://github.com/joshuayingwhat/blog_resource/blob/main/binder.c.png?raw=true" alt="" />
+res = ioctl(bs-&gt;fd, BINDER_WRITE_READ, &amp;bwr);从驱动里面读取数据</p>
+
+<p>解析数据res = binder_parse(bs, 0, (uintptr_t) readbuf, bwr.read_consumed, func);</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">binder_parse</span><span class="p">(</span><span class="k">struct</span> <span class="n">binder_state</span> <span class="o">*</span><span class="n">bs</span><span class="p">,</span> <span class="k">struct</span> <span class="n">binder_io</span> <span class="o">*</span><span class="n">bio</span><span class="p">,</span>
+                 <span class="kt">uintptr_t</span> <span class="n">ptr</span><span class="p">,</span> <span class="kt">size_t</span> <span class="n">size</span><span class="p">,</span> <span class="n">binder_handler</span> <span class="n">func</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">r</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+    <span class="kt">uintptr_t</span> <span class="n">end</span> <span class="o">=</span> <span class="n">ptr</span> <span class="o">+</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span> <span class="n">size</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="n">ptr</span> <span class="o">&lt;</span> <span class="n">end</span><span class="p">)</span> <span class="p">{</span>
+        <span class="kt">uint32_t</span> <span class="n">cmd</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="o">*</span><span class="p">)</span> <span class="n">ptr</span><span class="p">;</span>
+        <span class="n">ptr</span> <span class="o">+=</span> <span class="k">sizeof</span><span class="p">(</span><span class="kt">uint32_t</span><span class="p">);</span>
+        <span class="k">case</span> <span class="n">BR_TRANSACTION</span><span class="p">:</span> <span class="p">{</span>
+            <span class="k">struct</span> <span class="n">binder_transaction_data</span> <span class="o">*</span><span class="n">txn</span> <span class="o">=</span> <span class="p">(</span><span class="k">struct</span> <span class="n">binder_transaction_data</span> <span class="o">*</span><span class="p">)</span> <span class="n">ptr</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">((</span><span class="n">end</span> <span class="o">-</span> <span class="n">ptr</span><span class="p">)</span> <span class="o">&lt;</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">txn</span><span class="p">))</span> <span class="p">{</span>
+                <span class="n">ALOGE</span><span class="p">(</span><span class="s">"parse: txn too small!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+                <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="n">binder_dump_txn</span><span class="p">(</span><span class="n">txn</span><span class="p">);</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">func</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kt">unsigned</span> <span class="n">rdata</span><span class="p">[</span><span class="mi">256</span><span class="o">/</span><span class="mi">4</span><span class="p">];</span>
+                <span class="k">struct</span> <span class="n">binder_io</span> <span class="n">msg</span><span class="p">;</span>
+                <span class="k">struct</span> <span class="n">binder_io</span> <span class="n">reply</span><span class="p">;</span>
+                <span class="kt">int</span> <span class="n">res</span><span class="p">;</span>
+
+                <span class="n">bio_init</span><span class="p">(</span><span class="o">&amp;</span><span class="n">reply</span><span class="p">,</span> <span class="n">rdata</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">rdata</span><span class="p">),</span> <span class="mi">4</span><span class="p">);</span>
+                <span class="n">bio_init_from_txn</span><span class="p">(</span><span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="n">txn</span><span class="p">);</span>
+                <span class="n">res</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">txn</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">msg</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">reply</span><span class="p">);</span>
+                <span class="n">binder_send_reply</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">reply</span><span class="p">,</span> <span class="n">txn</span><span class="o">-&gt;</span><span class="n">data</span><span class="p">.</span><span class="n">ptr</span><span class="p">.</span><span class="n">buffer</span><span class="p">,</span> <span class="n">res</span><span class="p">);</span>
+            <span class="p">}</span>
+            <span class="n">ptr</span> <span class="o">+=</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">txn</span><span class="p">);</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+</code></pre></div></div>
+<p>br_transaction解析数据res = func(bs, txn, &amp;msg, &amp;reply);其中func就是之前binder_looper传过来的svcmgr_handler。其中会根据txn→code选择不同的处理函数，是SVC_MGR_ADD_SERVICE或者SVC_MGR_GET_SERVICE函数</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">svcmgr_handler</span><span class="p">(</span><span class="k">struct</span> <span class="n">binder_state</span> <span class="o">*</span><span class="n">bs</span><span class="p">,</span>
+                   <span class="k">struct</span> <span class="n">binder_transaction_data</span> <span class="o">*</span><span class="n">txn</span><span class="p">,</span>
+                   <span class="k">struct</span> <span class="n">binder_io</span> <span class="o">*</span><span class="n">msg</span><span class="p">,</span>
+                   <span class="k">struct</span> <span class="n">binder_io</span> <span class="o">*</span><span class="n">reply</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">svcinfo</span> <span class="o">*</span><span class="n">si</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="o">*</span><span class="n">s</span><span class="p">;</span>
+    <span class="kt">size_t</span> <span class="n">len</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">handle</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">strict_policy</span><span class="p">;</span>
+    <span class="k">switch</span><span class="p">(</span><span class="n">txn</span><span class="o">-&gt;</span><span class="n">code</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="n">SVC_MGR_GET_SERVICE</span><span class="p">:</span>
+    <span class="k">case</span> <span class="n">SVC_MGR_CHECK_SERVICE</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">bio_get_string16</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">len</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">do_find_service</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">txn</span><span class="o">-&gt;</span><span class="n">sender_euid</span><span class="p">,</span> <span class="n">txn</span><span class="o">-&gt;</span><span class="n">sender_pid</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">handle</span><span class="p">)</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="n">bio_put_ref</span><span class="p">(</span><span class="n">reply</span><span class="p">,</span> <span class="n">handle</span><span class="p">);</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="n">SVC_MGR_ADD_SERVICE</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">bio_get_string16</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">len</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">bio_get_ref</span><span class="p">(</span><span class="n">msg</span><span class="p">);</span>
+        <span class="n">allow_isolated</span> <span class="o">=</span> <span class="n">bio_get_uint32</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">do_add_service</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">txn</span><span class="o">-&gt;</span><span class="n">sender_euid</span><span class="p">,</span>
+            <span class="n">allow_isolated</span><span class="p">,</span> <span class="n">txn</span><span class="o">-&gt;</span><span class="n">sender_pid</span><span class="p">))</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+        <span class="k">break</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="n">SVC_MGR_LIST_SERVICES</span><span class="p">:</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>3.2 读到数据后解析数据
+解析： 
+3.2.1.注册服务:在链表中记录名字</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">svcmgr_handler</span><span class="p">(</span><span class="k">struct</span> <span class="n">binder_state</span> <span class="o">*</span><span class="n">bs</span><span class="p">,</span>
+                   <span class="k">struct</span> <span class="n">binder_transaction_data</span> <span class="o">*</span><span class="n">txn</span><span class="p">,</span>
+                   <span class="k">struct</span> <span class="n">binder_io</span> <span class="o">*</span><span class="n">msg</span><span class="p">,</span>
+                   <span class="k">struct</span> <span class="n">binder_io</span> <span class="o">*</span><span class="n">reply</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">svcinfo</span> <span class="o">*</span><span class="n">si</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="o">*</span><span class="n">s</span><span class="p">;</span>
+    <span class="kt">size_t</span> <span class="n">len</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">handle</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">strict_policy</span><span class="p">;</span>
+    <span class="k">switch</span><span class="p">(</span><span class="n">txn</span><span class="o">-&gt;</span><span class="n">code</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="n">SVC_MGR_ADD_SERVICE</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">bio_get_string16</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">len</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">bio_get_ref</span><span class="p">(</span><span class="n">msg</span><span class="p">);</span>
+        <span class="n">allow_isolated</span> <span class="o">=</span> <span class="n">bio_get_uint32</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">do_add_service</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">txn</span><span class="o">-&gt;</span><span class="n">sender_euid</span><span class="p">,</span>
+            <span class="n">allow_isolated</span><span class="p">,</span> <span class="n">txn</span><span class="o">-&gt;</span><span class="n">sender_pid</span><span class="p">))</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+        <span class="k">break</span><span class="p">;</span>
+
+    <span class="k">case</span> <span class="n">SVC_MGR_LIST_SERVICES</span><span class="p">:</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>3.2.2.获取服务：</p>
+
+<p>2.1: 在链表中查询有没有这个服务</p>
+
+<p>2.2：返回“server进程” 返回 handle给client（根据整数号获取对应的进程）</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">svcmgr_handler</span><span class="p">(</span><span class="k">struct</span> <span class="n">binder_state</span> <span class="o">*</span><span class="n">bs</span><span class="p">,</span>
+                   <span class="k">struct</span> <span class="n">binder_transaction_data</span> <span class="o">*</span><span class="n">txn</span><span class="p">,</span>
+                   <span class="k">struct</span> <span class="n">binder_io</span> <span class="o">*</span><span class="n">msg</span><span class="p">,</span>
+                   <span class="k">struct</span> <span class="n">binder_io</span> <span class="o">*</span><span class="n">reply</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">struct</span> <span class="n">svcinfo</span> <span class="o">*</span><span class="n">si</span><span class="p">;</span>
+    <span class="kt">uint16_t</span> <span class="o">*</span><span class="n">s</span><span class="p">;</span>
+    <span class="kt">size_t</span> <span class="n">len</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">handle</span><span class="p">;</span>
+    <span class="kt">uint32_t</span> <span class="n">strict_policy</span><span class="p">;</span>
+    <span class="k">switch</span><span class="p">(</span><span class="n">txn</span><span class="o">-&gt;</span><span class="n">code</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">case</span> <span class="n">SVC_MGR_GET_SERVICE</span><span class="p">:</span>
+    <span class="k">case</span> <span class="n">SVC_MGR_CHECK_SERVICE</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">bio_get_string16</span><span class="p">(</span><span class="n">msg</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">len</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">s</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+        <span class="p">}</span>
+				<span class="c1">//server端的进程号</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">do_find_service</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">len</span><span class="p">,</span> <span class="n">txn</span><span class="o">-&gt;</span><span class="n">sender_euid</span><span class="p">,</span> <span class="n">txn</span><span class="o">-&gt;</span><span class="n">sender_pid</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">handle</span><span class="p">)</span>
+            <span class="k">break</span><span class="p">;</span>
+        <span class="n">bio_put_ref</span><span class="p">(</span><span class="n">reply</span><span class="p">,</span> <span class="n">handle</span><span class="p">);</span>
+        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="k">case</span> <span class="n">SVC_MGR_LIST_SERVICES</span><span class="p">:</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<h3 id="server进程bctest"><strong>server进程（bctest）</strong></h3>
+<h4 id="注册服务的过程"><strong>注册服务的过程:</strong></h4>
+<p>1.open驱动
+<img src="https://github.com/joshuayingwhat/blog_resource/blob/main/bctest1.c.png?raw=true" alt="" /></p>
+
+<p>2.注册服务
+2.1:向servicemanager发送调用哪个服务(函数)的名字</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">uint32_t</span> <span class="n">svcmgr</span> <span class="o">=</span> <span class="n">BINDER_SERVICE_MANAGER</span><span class="p">;</span>
+<span class="n">svcmgr_publish</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">svcmgr</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">&amp;</span><span class="n">token</span><span class="p">);</span>
+</code></pre></div></div>
+<p><img src="https://github.com/joshuayingwhat/blog_resource/blob/main/2024-01-17%2021.33.58.png?raw=true" alt="" />
+其中target=BINDER_SERVICE_MANAGER = 0 = servicemanager；向服务端发送消息</p>
+
+<p>3.while(true)
+    3.1:读驱动</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">binder_call</span><span class="p">(</span><span class="k">struct</span> <span class="n">binder_state</span> <span class="o">*</span><span class="n">bs</span><span class="p">,</span>
+                <span class="k">struct</span> <span class="n">binder_io</span> <span class="o">*</span><span class="n">msg</span><span class="p">,</span> <span class="k">struct</span> <span class="n">binder_io</span> <span class="o">*</span><span class="n">reply</span><span class="p">,</span>
+                <span class="kt">uint32_t</span> <span class="n">target</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">code</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">cmd</span> <span class="o">=</span> <span class="n">BC_TRANSACTION</span><span class="p">;</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">target</span><span class="p">.</span><span class="n">handle</span> <span class="o">=</span> <span class="n">target</span><span class="p">;</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">code</span> <span class="o">=</span> <span class="n">code</span><span class="p">;</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">flags</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">data_size</span> <span class="o">=</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">-</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">data0</span><span class="p">;</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">offsets_size</span> <span class="o">=</span> <span class="p">((</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">offs</span><span class="p">)</span> <span class="o">-</span> <span class="p">((</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">offs0</span><span class="p">);</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">ptr</span><span class="p">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">msg</span><span class="o">-&gt;</span><span class="n">data0</span><span class="p">;</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">ptr</span><span class="p">.</span><span class="n">offsets</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">msg</span><span class="o">-&gt;</span><span class="n">offs0</span><span class="p">;</span>
+
+    <span class="n">bwr</span><span class="p">.</span><span class="n">write_size</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">writebuf</span><span class="p">);</span>
+    <span class="n">bwr</span><span class="p">.</span><span class="n">write_consumed</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">bwr</span><span class="p">.</span><span class="n">write_buffer</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">writebuf</span><span class="p">;</span>
+
+    <span class="n">hexdump</span><span class="p">(</span><span class="n">msg</span><span class="o">-&gt;</span><span class="n">data0</span><span class="p">,</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">-</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">data0</span><span class="p">);</span>
+    <span class="k">for</span> <span class="p">(;;)</span> <span class="p">{</span>
+        <span class="n">bwr</span><span class="p">.</span><span class="n">read_size</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">readbuf</span><span class="p">);</span>
+        <span class="n">bwr</span><span class="p">.</span><span class="n">read_consumed</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">bwr</span><span class="p">.</span><span class="n">read_buffer</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span> <span class="n">readbuf</span><span class="p">;</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">ioctl</span><span class="p">(</span><span class="n">bs</span><span class="o">-&gt;</span><span class="n">fd</span><span class="p">,</span> <span class="n">BINDER_WRITE_READ</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">bwr</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="s">"binder: ioctl failed (%s)</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">strerror</span><span class="p">(</span><span class="n">errno</span><span class="p">));</span>
+            <span class="k">goto</span> <span class="n">fail</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">binder_parse</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">reply</span><span class="p">,</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span> <span class="n">readbuf</span><span class="p">,</span> <span class="n">bwr</span><span class="p">.</span><span class="n">read_consumed</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">goto</span> <span class="n">fail</span><span class="p">;</span>
+    <span class="p">}</span>
+</code></pre></div></div>
+<p>for(;;)死循环，        res = ioctl(bs-&gt;fd, BINDER_WRITE_READ, &amp;bwr);
+读驱动里面的数据</p>
+
+<p>3.2:解析数据，调用对应的函数</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    res = binder_parse(bs, reply, (uintptr_t) readbuf, bwr.read_consumed, 0); 解析数据
+</code></pre></div></div>
+
+<h3 id="binder_call分析"><strong>binder_call分析</strong></h3>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">binder_call</span><span class="p">(</span><span class="k">struct</span> <span class="n">binder_state</span> <span class="o">*</span><span class="n">bs</span><span class="p">,</span>
+                <span class="k">struct</span> <span class="n">binder_io</span> <span class="o">*</span><span class="n">msg</span><span class="p">,</span> <span class="k">struct</span> <span class="n">binder_io</span> <span class="o">*</span><span class="n">reply</span><span class="p">,</span>
+                <span class="kt">uint32_t</span> <span class="n">target</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">code</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int</span> <span class="n">res</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="n">binder_write_read</span> <span class="n">bwr</span><span class="p">;</span>
+    <span class="k">struct</span> <span class="p">{</span>
+        <span class="kt">uint32_t</span> <span class="n">cmd</span><span class="p">;</span>
+        <span class="k">struct</span> <span class="n">binder_transaction_data</span> <span class="n">txn</span><span class="p">;</span>
+    <span class="p">}</span> <span class="n">__attribute__</span><span class="p">((</span><span class="n">packed</span><span class="p">))</span> <span class="n">writebuf</span><span class="p">;</span>
+    <span class="kt">unsigned</span> <span class="n">readbuf</span><span class="p">[</span><span class="mi">32</span><span class="p">];</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">msg</span><span class="o">-&gt;</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="n">BIO_F_OVERFLOW</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="s">"binder: txn buffer overflow</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+        <span class="k">goto</span> <span class="n">fail</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">cmd</span> <span class="o">=</span> <span class="n">BC_TRANSACTION</span><span class="p">;</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">target</span><span class="p">.</span><span class="n">handle</span> <span class="o">=</span> <span class="n">target</span><span class="p">;</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">code</span> <span class="o">=</span> <span class="n">code</span><span class="p">;</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">flags</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">data_size</span> <span class="o">=</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">-</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">data0</span><span class="p">;</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">offsets_size</span> <span class="o">=</span> <span class="p">((</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">offs</span><span class="p">)</span> <span class="o">-</span> <span class="p">((</span><span class="kt">char</span><span class="o">*</span><span class="p">)</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">offs0</span><span class="p">);</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">ptr</span><span class="p">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">msg</span><span class="o">-&gt;</span><span class="n">data0</span><span class="p">;</span>
+    <span class="n">writebuf</span><span class="p">.</span><span class="n">txn</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">ptr</span><span class="p">.</span><span class="n">offsets</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">msg</span><span class="o">-&gt;</span><span class="n">offs0</span><span class="p">;</span>
+
+    <span class="n">bwr</span><span class="p">.</span><span class="n">write_size</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">writebuf</span><span class="p">);</span>
+    <span class="n">bwr</span><span class="p">.</span><span class="n">write_consumed</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">bwr</span><span class="p">.</span><span class="n">write_buffer</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">writebuf</span><span class="p">;</span>
+
+    <span class="n">hexdump</span><span class="p">(</span><span class="n">msg</span><span class="o">-&gt;</span><span class="n">data0</span><span class="p">,</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">-</span> <span class="n">msg</span><span class="o">-&gt;</span><span class="n">data0</span><span class="p">);</span>
+    <span class="k">for</span> <span class="p">(;;)</span> <span class="p">{</span>
+        <span class="n">bwr</span><span class="p">.</span><span class="n">read_size</span> <span class="o">=</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">readbuf</span><span class="p">);</span>
+        <span class="n">bwr</span><span class="p">.</span><span class="n">read_consumed</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">bwr</span><span class="p">.</span><span class="n">read_buffer</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span> <span class="n">readbuf</span><span class="p">;</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">ioctl</span><span class="p">(</span><span class="n">bs</span><span class="o">-&gt;</span><span class="n">fd</span><span class="p">,</span> <span class="n">BINDER_WRITE_READ</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">bwr</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">fprintf</span><span class="p">(</span><span class="n">stderr</span><span class="p">,</span><span class="s">"binder: ioctl failed (%s)</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">strerror</span><span class="p">(</span><span class="n">errno</span><span class="p">));</span>
+            <span class="k">goto</span> <span class="n">fail</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">binder_parse</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">reply</span><span class="p">,</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span> <span class="n">readbuf</span><span class="p">,</span> <span class="n">bwr</span><span class="p">.</span><span class="n">read_consumed</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">res</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="k">goto</span> <span class="n">fail</span><span class="p">;</span>
+    <span class="p">}</span>
+
+<span class="nl">fail:</span>
+    <span class="n">memset</span><span class="p">(</span><span class="n">reply</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="o">*</span><span class="n">reply</span><span class="p">));</span>
+    <span class="n">reply</span><span class="o">-&gt;</span><span class="n">flags</span> <span class="o">|=</span> <span class="n">BIO_F_IOERROR</span><span class="p">;</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>远程调用：</p>
+
+<p>首先向谁发数据 —→ target=目标进程</p>
+
+<p>调用哪个函数 ——&gt;code = 目标进程函数的id</p>
+
+<p>提供什么参数 ——&gt; msg</p>
+
+<p>返回值是什么 —→reply</p>
+
+<p>int binder_call(struct binder_state *bs,
+                struct binder_io *msg, struct binder_io *reply,
+                uint32_t target, uint32_t code)</p>
+
+<p>1.构造函数：放在buffer中，用binder_io来描述；
+<img src="https://github.com/joshuayingwhat/blog_resource/blob/main/2024-02-18%2018.21.48.png?raw=true" alt="" /></p>
+
+<p>2.调用ioctl发送数据；
+<img src="https://github.com/joshuayingwhat/blog_resource/blob/main/2024-02-18%2018.31.06.png?raw=true" alt="" /></p>
+
+<p>参考连接：<a href="https://cs.android.com/android/platform/superproject/+/android-cts-6.0_r28:frameworks/native/cmds/servicemanager/service_manager.c">https://cs.android.com/android/platform/superproject/+/android-cts-6.0_r28:frameworks/native/cmds/servicemanager/service_manager.c</a></p>
+
 
         </article>
         <hr>
