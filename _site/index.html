@@ -162,7 +162,7 @@
         </div>
         <div class="excerpt">
           
-<p><img src="https://github.com/joshuayingwhat/blog_resource/blob/main/Untitled.png?raw=true" alt="" />
+<p><img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/Untitled.png" alt="" />
 匿名binder是要依托于实名binder而存在的。
 当服务端通过实名binder向客户端传输一个匿名binder，客户端端会接收到一个匿名binder的引用然后可以向位于匿名binder进程发送数据。
 在内核层匿名binder通过实名binder发送给驱动后，驱动会检查当前的flat_binder_obj是否在当前进程有binder_node。</p>
@@ -242,61 +242,6 @@
 </code></pre></div></div>
 <p>其中BufferDescriptor描述了申请的buffer的宽高格式等信息。count表示申请的缓冲区的个数。
 IAllocator 的具体实现在pasthrough.cpp</p>
-<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">extern</span> <span class="s">"C"</span> <span class="n">IAllocator</span><span class="o">*</span> <span class="nf">HIDL_FETCH_IAllocator</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="cm">/* name */</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="n">GrallocLoader</span><span class="o">::</span><span class="n">load</span><span class="p">();</span>
-<span class="p">}</span>
-
-<span class="n">class</span> <span class="n">GrallocLoader</span> <span class="p">{</span>
-   <span class="nl">public:</span>
-    <span class="k">static</span> <span class="n">IAllocator</span><span class="o">*</span> <span class="n">load</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">const</span> <span class="n">hw_module_t</span><span class="o">*</span> <span class="n">module</span> <span class="o">=</span> <span class="n">loadModule</span><span class="p">();</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">module</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="n">nullptr</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="k">auto</span> <span class="n">hal</span> <span class="o">=</span> <span class="n">createHal</span><span class="p">(</span><span class="n">module</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">hal</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">return</span> <span class="n">nullptr</span><span class="p">;</span>
-        <span class="p">}</span>
-        <span class="k">return</span> <span class="n">createAllocator</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">hal</span><span class="p">));</span>
-    <span class="p">}</span>
-
-    <span class="c1">// load the gralloc module</span>
-    <span class="k">static</span> <span class="k">const</span> <span class="n">hw_module_t</span><span class="o">*</span> <span class="n">loadModule</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">const</span> <span class="n">hw_module_t</span><span class="o">*</span> <span class="n">module</span><span class="p">;</span>
-        <span class="kt">int</span> <span class="n">error</span> <span class="o">=</span> <span class="n">hw_get_module</span><span class="p">(</span><span class="n">GRALLOC_HARDWARE_MODULE_ID</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">module</span><span class="p">);</span>
-        <span class="k">if</span> <span class="p">(</span><span class="n">error</span><span class="p">)</span> <span class="p">{</span>
-            <span class="n">ALOGE</span><span class="p">(</span><span class="s">"failed to get gralloc module"</span><span class="p">);</span>
-            <span class="k">return</span> <span class="n">nullptr</span><span class="p">;</span>
-        <span class="p">}</span>
-
-        <span class="k">return</span> <span class="n">module</span><span class="p">;</span>
-    <span class="p">}</span>
-
-    <span class="c1">// create an AllocatorHal instance</span>
-    <span class="k">static</span> <span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">hal</span><span class="o">::</span><span class="n">AllocatorHal</span><span class="o">&gt;</span> <span class="n">createHal</span><span class="p">(</span><span class="k">const</span> <span class="n">hw_module_t</span><span class="o">*</span> <span class="n">module</span><span class="p">)</span> <span class="p">{</span>
-        <span class="kt">int</span> <span class="n">major</span> <span class="o">=</span> <span class="n">getModuleMajorApiVersion</span><span class="p">(</span><span class="n">module</span><span class="p">);</span>
-        <span class="k">switch</span> <span class="p">(</span><span class="n">major</span><span class="p">)</span> <span class="p">{</span>
-            <span class="k">case</span> <span class="mi">1</span><span class="p">:</span> <span class="p">{</span>
-                <span class="k">auto</span> <span class="n">hal</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Gralloc1Hal</span><span class="o">&gt;</span><span class="p">();</span>
-                <span class="k">return</span> <span class="n">hal</span><span class="o">-&gt;</span><span class="n">initWithModule</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="o">?</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">hal</span><span class="p">)</span> <span class="o">:</span> <span class="n">nullptr</span><span class="p">;</span>
-            <span class="p">}</span>
-            <span class="k">case</span> <span class="mi">0</span><span class="p">:</span> <span class="p">{</span>
-                <span class="k">auto</span> <span class="n">hal</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">Gralloc0Hal</span><span class="o">&gt;</span><span class="p">();</span>
-                <span class="k">return</span> <span class="n">hal</span><span class="o">-&gt;</span><span class="n">initWithModule</span><span class="p">(</span><span class="n">module</span><span class="p">)</span> <span class="o">?</span> <span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">hal</span><span class="p">)</span> <span class="o">:</span> <span class="n">nullptr</span><span class="p">;</span>
-            <span class="p">}</span>
-            <span class="nl">default:</span>
-                <span class="n">ALOGE</span><span class="p">(</span><span class="s">"unknown gralloc module major version %d"</span><span class="p">,</span> <span class="n">major</span><span class="p">);</span>
-                <span class="k">return</span> <span class="n">nullptr</span><span class="p">;</span>
-        <span class="p">}</span>
-    <span class="p">}</span>
-
-    <span class="c1">// create an IAllocator instance</span>
-    <span class="k">static</span> <span class="n">IAllocator</span><span class="o">*</span> <span class="n">createAllocator</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="n">hal</span><span class="o">::</span><span class="n">AllocatorHal</span><span class="o">&gt;</span> <span class="n">hal</span><span class="p">)</span> <span class="p">{</span>
-        <span class="k">auto</span> <span class="n">allocator</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">make_unique</span><span class="o">&lt;</span><span class="n">hal</span><span class="o">::</span><span class="n">Allocator</span><span class="o">&gt;</span><span class="p">();</span>
-        <span class="k">return</span> <span class="n">allocator</span><span class="o">-&gt;</span><span class="n">init</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">hal</span><span class="p">))</span> <span class="o">?</span> <span class="n">allocator</span><span class="p">.</span><span class="n">release</span><span class="p">()</span> <span class="o">:</span> <span class="n">nullptr</span><span class="p">;</span>
-    <span class="p">}</span>
-<span class="p">};</span>
-</code></pre></div></div>
 
         </div>
         <div class="read-all">
@@ -386,7 +331,7 @@ ipc通信机制的一般套路</p>
 <li>获取服务：向servicemanager查询服务得到一个指向目标进程的handle（这个handle就是目标进程server），target = 0 （表示目标进程是servicemanager）name就是client想要调用的服务 （函数）</li>
 </ol>
 
-<p><img src="https://cdn.jsdelivr.net/gh/joshuayingwhat/blog_resource@0.0.1/bctest.c.png" alt="" /></p>
+<p><img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/bctest.c.png" alt="" /></p>
 
 <p>同时SVC_MGR_GET_SERVICE也会被调用
 通过handle发送数据，这个时候就会导致server从驱动中读取到数据</p>

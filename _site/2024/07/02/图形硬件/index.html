@@ -161,6 +161,9 @@
         <article itemscope itemtype="http://schema.org/BlogPosting">
             <ul id="markdown-toc">
   <li><a href="#gralloc" id="markdown-toc-gralloc"><strong>gralloc</strong></a></li>
+  <li><a href="#分配图形缓冲流程" id="markdown-toc-分配图形缓冲流程"><strong>分配图形缓冲流程</strong></a></li>
+  <li><a href="#图像缓冲" id="markdown-toc-图像缓冲"><strong>图像缓冲</strong></a></li>
+  <li><a href="#hardware-composer" id="markdown-toc-hardware-composer"><strong>hardware composer</strong></a></li>
 </ul>
 
 <p>硬件抽象层统一了硬件调用的接口。</p>
@@ -177,6 +180,7 @@
 </code></pre></div></div>
 <p>其中BufferDescriptor描述了申请的buffer的宽高格式等信息。count表示申请的缓冲区的个数。
 IAllocator 的具体实现在pasthrough.cpp</p>
+
 <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">extern</span> <span class="s">"C"</span> <span class="n">IAllocator</span><span class="o">*</span> <span class="nf">HIDL_FETCH_IAllocator</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="cm">/* name */</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">return</span> <span class="n">GrallocLoader</span><span class="o">::</span><span class="n">load</span><span class="p">();</span>
 <span class="p">}</span>
@@ -232,6 +236,209 @@ IAllocator 的具体实现在pasthrough.cpp</p>
     <span class="p">}</span>
 <span class="p">};</span>
 </code></pre></div></div>
+<p>galloc 启动服务</p>
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">main</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">defaultPassthroughServiceImplementation</span><span class="o">&lt;</span><span class="n">IAllocator</span><span class="o">&gt;</span><span class="p">(</span><span class="mi">4</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<h2 id="分配图形缓冲流程"><strong>分配图形缓冲流程</strong></h2>
+<p>客户端向galloc请求分配图形缓冲。</p>
+
+<p>Allocator.allocate</p>
+
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>AllocatorImpl.allocateBuffers
+
+    Gralloc0HalImpl.allocateOneBuffer.alloc
+
+        gralloc_context_t.gralloc_alloc
+
+            gralloc.gralloc_alloc_buffer ![](https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic1.png) 通过getserice获取gralloc的服务mallocator ![](https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic2.png) 通过gralloc的代理服务mallocator调用allocate，向gralloc进程申请成功得到的缓冲通过outbufferhandles返回给调用者。
+</code></pre></div></div>
+
+<p>最终调用gralloc的gralloc_alloc_buffer分配内存缓冲
+<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic3.png" alt="" />
+通过ashmem_create_region分配内存，最终将分配的内存的文件描述符以buffer_handle_t返回给客户端,客户端通过binder夸进程传输这个文件描述符，拿到文件描述符后就可以通过mmap操作得到缓冲地址。</p>
+<h2 id="图像缓冲"><strong>图像缓冲</strong></h2>
+<p>分配的图像缓冲内存以graphicbuffer表示.创建graphicbuffer阶段初始化就会调用
+<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic4.png" alt="" />
+<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic5.png" alt="" />
+调用gralloc分配缓冲区内存，申请成功后缓冲保存到handle中，使用者得到graphicbuffer对象后取出地址才能保存图形数据。</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="n">GraphicBuffer</span><span class="o">::</span><span class="n">lockAsync</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">inUsage</span><span class="p">,</span> <span class="kt">void</span><span class="o">**</span> <span class="n">vaddr</span><span class="p">,</span> <span class="kt">int</span> <span class="n">fenceFd</span><span class="p">,</span>
+                                  <span class="kt">int32_t</span><span class="o">*</span> <span class="n">outBytesPerPixel</span><span class="p">,</span> <span class="kt">int32_t</span><span class="o">*</span> <span class="n">outBytesPerStride</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="n">Rect</span> <span class="n">lockBounds</span><span class="p">(</span><span class="n">width</span><span class="p">,</span> <span class="n">height</span><span class="p">);</span>
+    <span class="n">status_t</span> <span class="n">res</span> <span class="o">=</span>
+            <span class="n">lockAsync</span><span class="p">(</span><span class="n">inUsage</span><span class="p">,</span> <span class="n">lockBounds</span><span class="p">,</span> <span class="n">vaddr</span><span class="p">,</span> <span class="n">fenceFd</span><span class="p">,</span> <span class="n">outBytesPerPixel</span><span class="p">,</span> <span class="n">outBytesPerStride</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">res</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">status_t</span> <span class="n">GraphicBuffer</span><span class="o">::</span><span class="n">lockAsync</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">inUsage</span><span class="p">,</span> <span class="k">const</span> <span class="n">Rect</span><span class="o">&amp;</span> <span class="n">rect</span><span class="p">,</span> <span class="kt">void</span><span class="o">**</span> <span class="n">vaddr</span><span class="p">,</span> <span class="kt">int</span> <span class="n">fenceFd</span><span class="p">,</span>
+                                  <span class="kt">int32_t</span><span class="o">*</span> <span class="n">outBytesPerPixel</span><span class="p">,</span> <span class="kt">int32_t</span><span class="o">*</span> <span class="n">outBytesPerStride</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">lockAsync</span><span class="p">(</span><span class="n">inUsage</span><span class="p">,</span> <span class="n">inUsage</span><span class="p">,</span> <span class="n">rect</span><span class="p">,</span> <span class="n">vaddr</span><span class="p">,</span> <span class="n">fenceFd</span><span class="p">,</span> <span class="n">outBytesPerPixel</span><span class="p">,</span> <span class="n">outBytesPerStride</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">status_t</span> <span class="n">GraphicBuffer</span><span class="o">::</span><span class="n">lockAsync</span><span class="p">(</span><span class="kt">uint64_t</span> <span class="n">inProducerUsage</span><span class="p">,</span> <span class="kt">uint64_t</span> <span class="n">inConsumerUsage</span><span class="p">,</span>
+                                  <span class="k">const</span> <span class="n">Rect</span><span class="o">&amp;</span> <span class="n">rect</span><span class="p">,</span> <span class="kt">void</span><span class="o">**</span> <span class="n">vaddr</span><span class="p">,</span> <span class="kt">int</span> <span class="n">fenceFd</span><span class="p">,</span>
+                                  <span class="kt">int32_t</span><span class="o">*</span> <span class="n">outBytesPerPixel</span><span class="p">,</span> <span class="kt">int32_t</span><span class="o">*</span> <span class="n">outBytesPerStride</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">auto</span> <span class="n">result</span> <span class="o">=</span> <span class="n">getBufferMapper</span><span class="p">().</span><span class="n">lock</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="n">usage</span><span class="p">,</span> <span class="n">rect</span><span class="p">,</span> <span class="n">base</span><span class="o">::</span><span class="n">unique_fd</span><span class="p">{</span><span class="n">fenceFd</span><span class="p">});</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">result</span><span class="p">.</span><span class="n">has_value</span><span class="p">())</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">result</span><span class="p">.</span><span class="n">error</span><span class="p">().</span><span class="n">asStatus</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">auto</span> <span class="n">value</span> <span class="o">=</span> <span class="n">result</span><span class="p">.</span><span class="n">value</span><span class="p">();</span>
+    <span class="o">*</span><span class="n">vaddr</span> <span class="o">=</span> <span class="n">value</span><span class="p">.</span><span class="n">address</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">outBytesPerPixel</span><span class="p">)</span> <span class="p">{</span>
+        <span class="o">*</span><span class="n">outBytesPerPixel</span> <span class="o">=</span> <span class="n">legacyBpp</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">?</span> <span class="n">legacyBpp</span> <span class="o">:</span> <span class="n">value</span><span class="p">.</span><span class="n">bytesPerPixel</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">outBytesPerStride</span><span class="p">)</span> <span class="p">{</span>
+        <span class="o">*</span><span class="n">outBytesPerStride</span> <span class="o">=</span> <span class="n">legacyBps</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">?</span> <span class="n">legacyBps</span> <span class="o">:</span> <span class="n">value</span><span class="p">.</span><span class="n">bytesPerStride</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">OK</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>graphicbuffer保存了图形缓冲的文件描述符handle，对文件描述符进行mmap操作可得到图形缓冲的内存地址。</p>
+
+<p>应用程序调用graphicbuffer的lockasync可以获取缓冲的内存地址。应用程序得到地址后可以向图形缓冲读，写图形数据。</p>
+<h2 id="hardware-composer"><strong>hardware composer</strong></h2>
+<p>1.合成图形：把多个图形缓冲传给硬件混合渲染器，通知硬件混合渲染器执行合成操作。</p>
+
+<p>2.显示图形：把图形缓冲直接显示到屏幕。</p>
+
+<p>3.上报事件：接收底层上报的事件并转发给客户进程。
+<strong>IComposer</strong>
+主要用于客户端进程与hwc进程建立通信连接。</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="cm">/**
+     * Creates a client of the composer. All resources created by the client
+     * are owned by the client and are only visible to the client.
+     *
+     * There can only be one client at any time.
+     *
+     * @return error is NONE upon success. Otherwise,
+     *         NO_RESOURCES when no more client can be created currently.
+     * @return client is the newly created client.
+     */</span>
+    <span class="err">@</span><span class="n">entry</span>
+    <span class="err">@</span><span class="n">callflow</span><span class="p">(</span><span class="n">next</span><span class="o">=</span><span class="s">"*"</span><span class="p">)</span>
+    <span class="n">createClient</span><span class="p">()</span> <span class="n">generates</span> <span class="p">(</span><span class="n">Error</span> <span class="n">error</span><span class="p">,</span> <span class="n">IComposerClient</span> <span class="n">client</span><span class="p">);</span>
+</code></pre></div></div>
+<p>createClient用于创建IComposerCliet对象，IComposer对象由HIDL_FETCH_ICoomposer创建</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">extern</span> <span class="s">"C"</span> <span class="n">IMapper</span><span class="o">*</span> <span class="nf">HIDL_FETCH_IMapper</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="cm">/*name*/</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="n">GrallocLoader</span><span class="o">::</span><span class="n">load</span><span class="p">();</span>
+<span class="p">}</span>
+<span class="k">class</span> <span class="nc">HwcLoader</span> <span class="p">{</span>
+   <span class="nl">public:</span>
+    <span class="k">static</span> <span class="n">IComposer</span><span class="o">*</span> <span class="n">load</span><span class="p">()</span> <span class="p">{</span>
+        <span class="k">const</span> <span class="n">hw_module_t</span><span class="o">*</span> <span class="n">module</span> <span class="o">=</span> <span class="n">loadModule</span><span class="p">();</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">module</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nb">nullptr</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="k">auto</span> <span class="n">hal</span> <span class="o">=</span> <span class="n">createHalWithAdapter</span><span class="p">(</span><span class="n">module</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">hal</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">return</span> <span class="nb">nullptr</span><span class="p">;</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">createComposer</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">hal</span><span class="p">));</span>
+    <span class="p">}</span>
+</code></pre></div></div>
+<p>加载模块；</p>
+
+<p>创建适配层对象：hwchalimpl</p>
+
+<p>创建IComposer对象：负责创建IComposerClient对象并返回给客户进程。
+<strong>IComposerClient</strong>
+每个客户对象对应一个屏幕</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">interface</span> <span class="n">IComposerClient</span> <span class="p">{</span>
+	<span class="err">@</span><span class="n">entry</span>
+    <span class="err">@</span><span class="n">callflow</span><span class="p">(</span><span class="n">next</span><span class="o">=</span><span class="s">"*"</span><span class="p">)</span>
+    <span class="n">registerCallback</span><span class="p">(</span><span class="n">IComposerCallback</span> <span class="n">callback</span><span class="p">);</span>
+    <span class="err">@</span><span class="n">callflow</span><span class="p">(</span><span class="n">next</span><span class="o">=</span><span class="s">"*"</span><span class="p">)</span>
+    <span class="n">createLayer</span><span class="p">(</span><span class="n">Display</span> <span class="n">display</span><span class="p">,</span>
+                <span class="kt">uint32_t</span> <span class="n">bufferSlotCount</span><span class="p">)</span>
+     <span class="n">generates</span> <span class="p">(</span><span class="n">Error</span> <span class="n">error</span><span class="p">,</span>
+                <span class="n">Layer</span> <span class="n">layer</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>注册回调，客户端可以接收hwc进程的事件。</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">interface</span> <span class="n">IComposerCallback</span> <span class="p">{</span>
+	  <span class="err">@</span><span class="n">callflow</span><span class="p">(</span><span class="n">next</span><span class="o">=</span><span class="s">"*"</span><span class="p">)</span>
+    <span class="n">onHotplug</span><span class="p">(</span><span class="n">Display</span> <span class="n">display</span><span class="p">,</span> <span class="n">Connection</span> <span class="n">connected</span><span class="p">);</span>
+    <span class="err">@</span><span class="n">callflow</span><span class="p">(</span><span class="n">next</span><span class="o">=</span><span class="s">"*"</span><span class="p">)</span>
+    <span class="n">oneway</span> <span class="n">onRefresh</span><span class="p">(</span><span class="n">Display</span> <span class="n">display</span><span class="p">);</span>
+    <span class="err">@</span><span class="n">callflow</span><span class="p">(</span><span class="n">next</span><span class="o">=</span><span class="s">"*"</span><span class="p">)</span>
+    <span class="n">oneway</span> <span class="n">onVsync</span><span class="p">(</span><span class="n">Display</span> <span class="n">display</span><span class="p">,</span> <span class="kt">int64_t</span> <span class="n">timestamp</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>onHotplug：当前显示设备插入或者移除时，通知客户端进程</p>
+
+<p>onrefresh：通知客户进程提供新的帧缓冲</p>
+
+<p>onVsync：向客户进程发送Vsync信号</p>
+
+<p>客户端进程通过composer与hwc进程通信</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Composer</span> <span class="p">{</span>
+	<span class="n">mComposer</span> <span class="o">=</span> <span class="n">IComposer</span><span class="p">.</span><span class="n">getservice</span><span class="p">(</span><span class="n">servicename</span><span class="p">);</span>
+	<span class="n">mComposer</span><span class="o">-&gt;</span><span class="n">createclient</span><span class="p">()</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>getservice得到IComposer对象。然后创建IComposerClinet对象保存到mClient中。</p>
+
+<p>Composer通过mClinet与hwc进程建立通信连接。
+<strong>硬件混合渲染器合成</strong>
+客户进程需要把图形缓冲传给hwc进程，在由hwc进程传给显示驱动，通知硬件混合渲染器合成图像，合成好后直接传给显示设备。需要有3个步骤
+<strong>1.创建图层</strong>
+客户进程把图形缓冲传给hwc进程，首先需要创建涂层。
+<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic6.png" alt="" />
+向hwc进程请求创建图层</p>
+
+<p>ComposerClientImpl收到请求后转给适配层对象hwchalmpl处理。</p>
+
+<p>hwchalimpl收到请求后交给设备对象处理。</p>
+
+<p>hwcsession继承hwc2_device_t,收到createlayer后交给hwcdisplay处理
+<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic7.png" alt="" />
+将创建的图层存放到layer_map中。
+<strong>2.设置图层缓冲</strong>
+设置好了图层后，客户端将图形缓冲传到hwc进程。composer的setlayerbuffer用于向hwc进程传递客户端进程的图形缓冲
+<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic9.png" alt="" />
+其中取出graphicbuffer的handle。把handle传到hwc进程。</p>
+
+<p>hwclayer处理setlayerbuffer</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">HWC2</span><span class="o">::</span><span class="n">Error</span> <span class="n">HWCLayer</span><span class="o">::</span><span class="n">SetLayerBuffer</span><span class="p">(</span><span class="n">buffer_handle_t</span> <span class="n">buffer</span><span class="p">,</span> <span class="kt">int32_t</span> <span class="n">acquire_fence</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">acquire_fence</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+   <span class="n">DLOGE</span><span class="p">(</span><span class="s">"acquire_fence is zero"</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">HWC2</span><span class="o">::</span><span class="n">Error</span><span class="o">::</span><span class="n">BadParameter</span><span class="p">;</span>
+ <span class="p">}</span>
+  <span class="k">const</span> <span class="n">private_handle_t</span> <span class="o">*</span><span class="n">handle</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="k">const</span> <span class="n">private_handle_t</span> <span class="o">*&gt;</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+  <span class="n">layer_buffer</span><span class="o">-&gt;</span><span class="n">format</span> <span class="o">=</span> <span class="n">format</span><span class="p">;</span>
+  <span class="n">layer_buffer</span><span class="o">-&gt;</span><span class="n">width</span> <span class="o">=</span> <span class="n">UINT32</span><span class="p">(</span><span class="n">aligned_width</span><span class="p">);</span>
+  <span class="n">layer_buffer</span><span class="o">-&gt;</span><span class="n">height</span> <span class="o">=</span> <span class="n">UINT32</span><span class="p">(</span><span class="n">aligned_height</span><span class="p">);</span>
+  <span class="n">layer_buffer</span><span class="o">-&gt;</span><span class="n">unaligned_width</span> <span class="o">=</span> <span class="n">UINT32</span><span class="p">(</span><span class="n">handle</span><span class="o">-&gt;</span><span class="n">unaligned_width</span><span class="p">);</span>
+  <span class="n">layer_buffer</span><span class="o">-&gt;</span><span class="n">unaligned_height</span> <span class="o">=</span> <span class="n">UINT32</span><span class="p">(</span><span class="n">handle</span><span class="o">-&gt;</span><span class="n">unaligned_height</span><span class="p">);</span>
+  <span class="n">layer_buffer</span><span class="o">-&gt;</span><span class="n">planes</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">fd</span> <span class="o">=</span> <span class="n">ion_fd_</span><span class="p">;</span>
+  <span class="n">layer_buffer</span><span class="o">-&gt;</span><span class="n">planes</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">offset</span> <span class="o">=</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">offset</span><span class="p">;</span>
+  <span class="n">layer_buffer</span><span class="o">-&gt;</span><span class="n">planes</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="n">stride</span> <span class="o">=</span> <span class="n">UINT32</span><span class="p">(</span><span class="n">handle</span><span class="o">-&gt;</span><span class="n">width</span><span class="p">);</span>
+  <span class="n">layer_buffer</span><span class="o">-&gt;</span><span class="n">acquire_fence_fd</span> <span class="o">=</span> <span class="n">acquire_fence</span><span class="p">;</span>
+  <span class="n">layer_buffer</span><span class="o">-&gt;</span><span class="n">size</span> <span class="o">=</span> <span class="n">handle</span><span class="o">-&gt;</span><span class="n">size</span><span class="p">;</span>
+  <span class="n">layer_buffer</span><span class="o">-&gt;</span><span class="n">buffer_id</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">uint64_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
+  <span class="k">return</span> <span class="n">HWC2</span><span class="o">::</span><span class="n">Error</span><span class="o">::</span><span class="n">None</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>此时已经将图形缓冲的数据发送给了hwc
+<strong>合成并显示</strong>
+hwcdevice收到commit请求后把图层缓冲数据给到驱动。</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">DisplayError</span> <span class="n">HWDevice</span><span class="o">::</span><span class="n">Commit</span><span class="p">(</span><span class="n">HWLayers</span> <span class="o">*</span><span class="n">hw_layers</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">DTRACE_SCOPED</span><span class="p">();</span>
+  <span class="n">HWLayersInfo</span> <span class="o">&amp;</span><span class="n">hw_layer_info</span> <span class="o">=</span> <span class="n">hw_layers</span><span class="o">-&gt;</span><span class="n">info</span><span class="p">;</span>
+  <span class="n">Sys</span><span class="o">::</span><span class="n">ioctl_</span><span class="p">(</span><span class="n">device_fd_</span><span class="p">,</span> <span class="n">INT</span><span class="p">(</span><span class="n">MSMFB_ATOMIC_COMMIT</span><span class="p">)</span>
+  <span class="p">}</span>
+</code></pre></div></div>
+<p><strong>图形库合成</strong>
+合成图形的工作也可以由客户端完成，客户端进程通过图形库合成图形的得到帧缓冲，通过hwc将帧缓冲传给显示驱动。
+<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic8.png" alt="" />
+<strong>显示帧缓冲</strong>
+hwc的hwc2onfbadapter收到请求后，调用framebuffer的fb_post将帧缓冲传递到显示驱动上
+<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic10.png" alt="" />
+通过ioctl将帧缓冲传递到显示驱动，显示驱动收到帧缓冲会把它传给显示设备。</p>
 
         </article>
         <hr>
