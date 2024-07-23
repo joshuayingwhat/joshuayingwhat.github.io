@@ -14,7 +14,9 @@ type: page
 * [vpn](https://www.xcjs123.com/)
 
     翻墙工具。
+* [免费图床](https://smms.app/)
 
+    SM.MS
 ## 编程
 
 ### Kotlin
