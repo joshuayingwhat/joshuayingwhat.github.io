@@ -5,9 +5,41 @@
     <description></description>
     <link>http://localhost:4000/</link>
     <atom:link href="http://localhost:4000/feed.xml" rel="self" type="application/rss+xml"/>
-    <pubDate>Sat, 13 Jul 2024 22:09:25 +0800</pubDate>
-    <lastBuildDate>Sat, 13 Jul 2024 22:09:25 +0800</lastBuildDate>
+    <pubDate>Tue, 23 Jul 2024 23:03:32 +0800</pubDate>
+    <lastBuildDate>Tue, 23 Jul 2024 23:03:32 +0800</lastBuildDate>
     <generator>Jekyll v4.0.0</generator>
+    
+      <item>
+        <title>十:binder框架framework分析</title>
+        <description>&lt;ul id=&quot;markdown-toc&quot;&gt;
+  &lt;li&gt;&lt;a href=&quot;#注册服务过程&quot; id=&quot;markdown-toc-注册服务过程&quot;&gt;注册服务过程&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;img src=&quot;https://s2.loli.net/2024/07/23/7wYmXtxjBlnJOZA.jpg&quot; alt=&quot;&quot; /&gt;
+&lt;font color=&quot;red&quot;&gt;framework binder就是将bpbinder转换为binderproxy使用。&lt;/font&gt;
+
+&lt;h1 id=&quot;注册服务过程&quot;&gt;注册服务过程&lt;/h1&gt;
+servicemanager.java
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;addService&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;String&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;IBinder&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;service&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;boolean&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;allowIsolated&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;try&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;//先获取SMP对象，则执行注册服务操作【见小节3.2/3.4】&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;getIServiceManager&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;addService&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;name&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;service&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;allowIsolated&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nc&quot;&gt;RemoteException&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;nc&quot;&gt;Log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;TAG&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot;error in addService&quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;e&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+</description>
+        <pubDate>Tue, 23 Jul 2024 00:00:00 +0800</pubDate>
+        <link>http://localhost:4000/2024/07/23/binder%E6%A1%86%E6%9E%B6framework%E5%88%86%E6%9E%90/</link>
+        <guid isPermaLink="true">http://localhost:4000/2024/07/23/binder%E6%A1%86%E6%9E%B6framework%E5%88%86%E6%9E%90/</guid>
+        
+        <category>binder</category>
+        
+        
+        <category>android</category>
+        
+      </item>
     
       <item>
         <title>十:匿名binder</title>
@@ -16,6 +48,7 @@
 匿名binder是要依托于实名binder而存在的。
 当服务端通过实名binder向客户端传输一个匿名binder，客户端端会接收到一个匿名binder的引用然后可以向位于匿名binder进程发送数据。
 在内核层匿名binder通过实名binder发送给驱动后，驱动会检查当前的flat_binder_obj是否在当前进程有binder_node。
+
 </description>
         <pubDate>Mon, 08 Jul 2024 00:00:00 +0800</pubDate>
         <link>http://localhost:4000/2024/07/08/%E5%8C%BF%E5%90%8Dbinder/</link>
@@ -48,6 +81,7 @@
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 其中BufferDescriptor描述了申请的buffer的宽高格式等信息。count表示申请的缓冲区的个数。
 IAllocator 的具体实现在pasthrough.cpp
+
 </description>
         <pubDate>Tue, 02 Jul 2024 00:00:00 +0800</pubDate>
         <link>http://localhost:4000/2024/07/02/%E5%9B%BE%E5%BD%A2%E7%A1%AC%E4%BB%B6/</link>
@@ -97,6 +131,7 @@ ipc通信机制的一般套路
 
 同时SVC_MGR_GET_SERVICE也会被调用
 通过handle发送数据，这个时候就会导致server从驱动中读取到数据
+
 </description>
         <pubDate>Wed, 12 Jun 2024 00:00:00 +0800</pubDate>
         <link>http://localhost:4000/2024/06/12/binder%E6%A1%86%E6%9E%B6%E7%B3%BB%E7%BB%9F%E5%88%86%E6%9E%90/</link>
@@ -113,6 +148,7 @@ ipc通信机制的一般套路
         <title>指针数组和数组指针基础</title>
         <description>
 近期对C语言关键的特性做一个复习。
+
 </description>
         <pubDate>Sun, 15 Oct 2017 00:00:00 +0800</pubDate>
         <link>http://localhost:4000/2017/10/15/point_array__array_point/</link>

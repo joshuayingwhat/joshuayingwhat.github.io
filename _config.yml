@@ -14,10 +14,8 @@ url: "https://JoshuaYingWhatEgr.github.io" # the base hostname & protocol for yo
 permalink: /:year/:month/:day/:title/
 
 # other links
-github_username:  joshuayingwhat
+github_username: joshuayingwhat
 email: joshuayingwhat@163.com
-
-
 
 #description_footer: 本站记录我日常历程!!!
 
@@ -49,7 +47,7 @@ category_dir: category/
 tag_dir: tag/
 
 # excerpt
-excerpt_separator: "\n\n\n\n"
+excerpt_separator: "......"
 
 # paginate
 gems: [jekyll-paginate]

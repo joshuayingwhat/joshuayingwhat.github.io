@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>十:binder框架framework分析</title>
+    <meta name="description" content="  注册服务过程framework binder就是将bpbinder转换为binderproxy使用。注册服务过程servicemanager.javapublic static void addService(String name, IBinder service, boolean allowIsolate...">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2024/07/23/binder%E6%A1%86%E6%9E%B6framework%E5%88%86%E6%9E%90/">
+    <link rel="alternate" type="application/rss+xml" title="joshuayingwhat" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">joshuayingwhat</a>
+        <small>IT Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>十:binder框架framework分析</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2024-07-23
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#android" title="Category: android" rel="category">android</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+                
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#binder" title="Tag: binder" rel="tag">binder</a-->
+        <a href="/tag/#binder" title="Tag: binder" rel="tag">binder</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+            <ul id="markdown-toc">
+  <li><a href="#注册服务过程" id="markdown-toc-注册服务过程">注册服务过程</a>    <ul>
+      <li><a href="#getiservicemanager" id="markdown-toc-getiservicemanager">getIServiceManager</a></li>
+      <li><a href="#getcontextobject" id="markdown-toc-getcontextobject">getContextObject</a></li>
+      <li><a href="#javaobjectforibinder" id="markdown-toc-javaobjectforibinder">javaObjectForIBinder</a></li>
+      <li><a href="#servicemanagernativeasinterface" id="markdown-toc-servicemanagernativeasinterface">ServiceManagerNative.asInterface</a></li>
+      <li><a href="#servicemanagerproxy" id="markdown-toc-servicemanagerproxy">servicemanagerproxy</a>        <ul>
+          <li><a href="#addservice" id="markdown-toc-addservice">addservice</a></li>
+          <li><a href="#writestrongbinder" id="markdown-toc-writestrongbinder">writeStrongBinder</a></li>
+          <li><a href="#android_os_parcel_writestrongbinder" id="markdown-toc-android_os_parcel_writestrongbinder"><strong>android_os_Parcel_writeStrongBinder</strong></a></li>
+          <li><a href="#ibinderforjavaobject" id="markdown-toc-ibinderforjavaobject">ibinderForJavaObject</a></li>
+          <li><a href="#jbh-getenv-obj" id="markdown-toc-jbh-getenv-obj">jbh-&gt;get(env, obj)</a></li>
+          <li><a href="#parcel-writestrongbinder" id="markdown-toc-parcel-writestrongbinder">parcel-&gt;writeStrongBinder</a></li>
+          <li><a href="#flatten_binder" id="markdown-toc-flatten_binder">flatten_binder</a></li>
+          <li><a href="#finish_flatten_binder" id="markdown-toc-finish_flatten_binder"><strong>finish_flatten_binder</strong></a></li>
+          <li><a href="#mremotetransact" id="markdown-toc-mremotetransact">mRemote.transact</a></li>
+          <li><a href="#android_os_binderproxy_transact" id="markdown-toc-android_os_binderproxy_transact"><strong>android_os_BinderProxy_transact</strong></a></li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+  <li><a href="#获取服务的过程" id="markdown-toc-获取服务的过程">获取服务的过程</a>    <ul>
+      <li><a href="#binderproxytransact" id="markdown-toc-binderproxytransact">binderproxy.transact</a></li>
+      <li><a href="#ipcthreadstatetransact" id="markdown-toc-ipcthreadstatetransact">ipcthreadstate.transact</a></li>
+      <li><a href="#waitforresponse" id="markdown-toc-waitforresponse">waitForResponse</a></li>
+      <li><a href="#binder_send_reply" id="markdown-toc-binder_send_reply">binder_send_reply</a></li>
+      <li><a href="#readstrongbinder" id="markdown-toc-readstrongbinder">readStrongBinder</a></li>
+      <li><a href="#parcel-readstrongbinder" id="markdown-toc-parcel-readstrongbinder">parcel-&gt;readStrongBinder</a></li>
+      <li><a href="#unflatten_binder" id="markdown-toc-unflatten_binder">unflatten_binder</a></li>
+      <li><a href="#getstrongproxyforhandle" id="markdown-toc-getstrongproxyforhandle">getStrongProxyForHandle</a></li>
+    </ul>
+  </li>
+</ul>
+
+<p><img src="https://s2.loli.net/2024/07/23/7wYmXtxjBlnJOZA.jpg" alt="" /></p>
+<font color="red">framework binder就是将bpbinder转换为binderproxy使用。</font>
+
+<h1 id="注册服务过程">注册服务过程</h1>
+<p>servicemanager.java</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">addService</span><span class="o">(</span><span class="nc">String</span> <span class="n">name</span><span class="o">,</span> <span class="nc">IBinder</span> <span class="n">service</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">allowIsolated</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="c1">//先获取SMP对象，则执行注册服务操作【见小节3.2/3.4】</span>
+        <span class="n">getIServiceManager</span><span class="o">().</span><span class="na">addService</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">service</span><span class="o">,</span> <span class="n">allowIsolated</span><span class="o">);</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">RemoteException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">Log</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"error in addService"</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>……</p>
+
+<h3 id="getiservicemanager">getIServiceManager</h3>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">static</span> <span class="nc">IServiceManager</span> <span class="nf">getIServiceManager</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">sServiceManager</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">sServiceManager</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="c1">//【分别见3.2.1和3.3】</span>
+    <span class="n">sServiceManager</span> <span class="o">=</span> <span class="nc">ServiceManagerNative</span><span class="o">.</span><span class="na">asInterface</span><span class="o">(</span><span class="nc">BinderInternal</span><span class="o">.</span><span class="na">getContextObject</span><span class="o">());</span>
+    <span class="k">return</span> <span class="n">sServiceManager</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>采用单利模式获取sServiceManager，返回servicemanagerproxy。</p>
+<h3 id="getcontextobject">getContextObject</h3>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">static</span> <span class="n">jobject</span> <span class="nf">android_os_BinderInternal_getContextObject</span><span class="o">(</span><span class="nc">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="o">,</span> <span class="n">jobject</span> <span class="n">clazz</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="n">sp</span><span class="o">&lt;</span><span class="nc">IBinder</span><span class="o">&gt;</span> <span class="n">b</span> <span class="o">=</span> <span class="nl">ProcessState:</span><span class="o">:</span><span class="n">self</span><span class="o">()-&gt;</span><span class="n">getContextObject</span><span class="o">(</span><span class="no">NULL</span><span class="o">);</span>
+    <span class="k">return</span> <span class="nf">javaObjectForIBinder</span><span class="o">(</span><span class="n">env</span><span class="o">,</span> <span class="n">b</span><span class="o">);</span>  <span class="c1">//【见3.2.2】</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>就是通过handle=0去获取servicemanager的引用</p>
+
+<h3 id="javaobjectforibinder">javaObjectForIBinder</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">jobject</span> <span class="nf">javaObjectForIBinder</span><span class="o">(</span><span class="nc">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="o">,</span> <span class="kd">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="nc">IBinder</span><span class="o">&gt;&amp;</span> <span class="n">val</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">val</span> <span class="o">==</span> <span class="no">NULL</span><span class="o">)</span> <span class="k">return</span> <span class="no">NULL</span><span class="o">;</span>
+
+    <span class="k">if</span> <span class="o">(</span><span class="n">val</span><span class="o">-&gt;</span><span class="n">checkSubclass</span><span class="o">(&amp;</span><span class="n">gBinderOffsets</span><span class="o">))</span> <span class="o">{</span> <span class="c1">//返回false</span>
+        <span class="n">jobject</span> <span class="n">object</span> <span class="o">=</span> <span class="n">static_cast</span><span class="o">&lt;</span><span class="nc">JavaBBinder</span><span class="o">*&gt;(</span><span class="n">val</span><span class="o">.</span><span class="na">get</span><span class="o">())-&gt;</span><span class="n">object</span><span class="o">();</span>
+        <span class="k">return</span> <span class="n">object</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nc">AutoMutex</span> <span class="nf">_l</span><span class="o">(</span><span class="n">mProxyLock</span><span class="o">);</span>
+
+    <span class="n">jobject</span> <span class="n">object</span> <span class="o">=</span> <span class="o">(</span><span class="n">jobject</span><span class="o">)</span><span class="n">val</span><span class="o">-&gt;</span><span class="n">findObject</span><span class="o">(&amp;</span><span class="n">gBinderProxyOffsets</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">object</span> <span class="o">!=</span> <span class="no">NULL</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//第一次object为null</span>
+        <span class="n">jobject</span> <span class="n">res</span> <span class="o">=</span> <span class="n">jniGetReferent</span><span class="o">(</span><span class="n">env</span><span class="o">,</span> <span class="n">object</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">res</span> <span class="o">!=</span> <span class="no">NULL</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="n">res</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="n">android_atomic_dec</span><span class="o">(&amp;</span><span class="n">gNumProxyRefs</span><span class="o">);</span>
+        <span class="n">val</span><span class="o">-&gt;</span><span class="n">detachObject</span><span class="o">(&amp;</span><span class="n">gBinderProxyOffsets</span><span class="o">);</span>
+        <span class="n">env</span><span class="o">-&gt;</span><span class="nc">DeleteGlobalRef</span><span class="o">(</span><span class="n">object</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//创建BinderProxy对象</span>
+    <span class="n">object</span> <span class="o">=</span> <span class="n">env</span><span class="o">-&gt;</span><span class="nc">NewObject</span><span class="o">(</span><span class="n">gBinderProxyOffsets</span><span class="o">.</span><span class="na">mClass</span><span class="o">,</span> <span class="n">gBinderProxyOffsets</span><span class="o">.</span><span class="na">mConstructor</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">object</span> <span class="o">!=</span> <span class="no">NULL</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">//BinderProxy.mObject成员变量记录BpBinder对象</span>
+        <span class="n">env</span><span class="o">-&gt;</span><span class="nc">SetLongField</span><span class="o">(</span><span class="n">object</span><span class="o">,</span> <span class="n">gBinderProxyOffsets</span><span class="o">.</span><span class="na">mObject</span><span class="o">,</span> <span class="o">(</span><span class="n">jlong</span><span class="o">)</span><span class="n">val</span><span class="o">.</span><span class="na">get</span><span class="o">());</span>
+        <span class="n">val</span><span class="o">-&gt;</span><span class="n">incStrong</span><span class="o">((</span><span class="kt">void</span><span class="o">*)</span><span class="n">javaObjectForIBinder</span><span class="o">);</span>
+
+        <span class="n">jobject</span> <span class="n">refObject</span> <span class="o">=</span> <span class="n">env</span><span class="o">-&gt;</span><span class="nc">NewGlobalRef</span><span class="o">(</span>
+                <span class="n">env</span><span class="o">-&gt;</span><span class="nc">GetObjectField</span><span class="o">(</span><span class="n">object</span><span class="o">,</span> <span class="n">gBinderProxyOffsets</span><span class="o">.</span><span class="na">mSelf</span><span class="o">));</span>
+        <span class="c1">//将BinderProxy对象信息附加到BpBinder的成员变量mObjects中</span>
+        <span class="n">val</span><span class="o">-&gt;</span><span class="n">attachObject</span><span class="o">(&amp;</span><span class="n">gBinderProxyOffsets</span><span class="o">,</span> <span class="n">refObject</span><span class="o">,</span>
+                <span class="n">jnienv_to_javavm</span><span class="o">(</span><span class="n">env</span><span class="o">),</span> <span class="n">proxy_cleanup</span><span class="o">);</span>
+
+        <span class="n">sp</span><span class="o">&lt;</span><span class="nc">DeathRecipientList</span><span class="o">&gt;</span> <span class="n">drl</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">DeathRecipientList</span><span class="o">;</span>
+        <span class="n">drl</span><span class="o">-&gt;</span><span class="n">incStrong</span><span class="o">((</span><span class="kt">void</span><span class="o">*)</span><span class="n">javaObjectForIBinder</span><span class="o">);</span>
+        <span class="c1">//BinderProxy.mOrgue成员变量记录死亡通知对象</span>
+        <span class="n">env</span><span class="o">-&gt;</span><span class="nc">SetLongField</span><span class="o">(</span><span class="n">object</span><span class="o">,</span> <span class="n">gBinderProxyOffsets</span><span class="o">.</span><span class="na">mOrgue</span><span class="o">,</span> <span class="n">reinterpret_cast</span><span class="o">&lt;</span><span class="n">jlong</span><span class="o">&gt;(</span><span class="n">drl</span><span class="o">.</span><span class="na">get</span><span class="o">()));</span>
+
+        <span class="n">android_atomic_inc</span><span class="o">(&amp;</span><span class="n">gNumProxyRefs</span><span class="o">);</span>
+        <span class="n">incRefsCreated</span><span class="o">(</span><span class="n">env</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="n">object</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>根据BpBinder(C++)生成BinderProxy(Java)对象. 主要工作是创建BinderProxy对象,并把BpBinder对象地址保存到BinderProxy.mObject成员变量. 到此，可知ServiceManagerNative.asInterface(BinderInternal.getContextObject()) 等价于</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nc">ServiceManagerNative</span><span class="o">.</span><span class="na">asInterface</span><span class="o">(</span><span class="k">new</span> <span class="nc">BinderProxy</span><span class="o">());</span>
+</code></pre></div></div>
+
+<h3 id="servicemanagernativeasinterface">ServiceManagerNative.asInterface</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="kd">static</span> <span class="kd">public</span> <span class="nc">IServiceManager</span> <span class="nf">asInterface</span><span class="o">(</span><span class="nc">IBinder</span> <span class="n">obj</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">obj</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span> <span class="c1">//obj为BpBinder</span>
+        <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="c1">//由于obj为BpBinder，该方法默认返回null</span>
+    <span class="nc">IServiceManager</span> <span class="n">in</span> <span class="o">=</span> <span class="o">(</span><span class="nc">IServiceManager</span><span class="o">)</span><span class="n">obj</span><span class="o">.</span><span class="na">queryLocalInterface</span><span class="o">(</span><span class="n">descriptor</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">in</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">in</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="k">new</span> <span class="nf">ServiceManagerProxy</span><span class="o">(</span><span class="n">obj</span><span class="o">);</span> <span class="c1">//【见小节3.3.1】</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h2 id="servicemanagerproxy">servicemanagerproxy</h2>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">ServiceManagerProxy</span> <span class="kd">implements</span> <span class="nc">IServiceManager</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="nf">ServiceManagerProxy</span><span class="o">(</span><span class="nc">IBinder</span> <span class="n">remote</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">mRemote</span> <span class="o">=</span> <span class="n">remote</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>mremote本质就是binderproxy(bpbinder)此时的mremote就是handle=0的servicemamager。</p>
+
+<h3 id="addservice">addservice</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">addService</span><span class="o">(</span><span class="nc">String</span> <span class="n">name</span><span class="o">,</span> <span class="nc">IBinder</span> <span class="n">service</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">allowIsolated</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">RemoteException</span> <span class="o">{</span>
+    <span class="nc">Parcel</span> <span class="n">data</span> <span class="o">=</span> <span class="nc">Parcel</span><span class="o">.</span><span class="na">obtain</span><span class="o">();</span>
+    <span class="nc">Parcel</span> <span class="n">reply</span> <span class="o">=</span> <span class="nc">Parcel</span><span class="o">.</span><span class="na">obtain</span><span class="o">();</span>
+    <span class="n">data</span><span class="o">.</span><span class="na">writeInterfaceToken</span><span class="o">(</span><span class="nc">IServiceManager</span><span class="o">.</span><span class="na">descriptor</span><span class="o">);</span>
+    <span class="n">data</span><span class="o">.</span><span class="na">writeString</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+    <span class="c1">//【见小节3.5】</span>
+    <span class="n">data</span><span class="o">.</span><span class="na">writeStrongBinder</span><span class="o">(</span><span class="n">service</span><span class="o">);</span>
+    <span class="n">data</span><span class="o">.</span><span class="na">writeInt</span><span class="o">(</span><span class="n">allowIsolated</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">0</span><span class="o">);</span>
+    <span class="c1">//mRemote为BinderProxy【见小节3.7】</span>
+    <span class="n">mRemote</span><span class="o">.</span><span class="na">transact</span><span class="o">(</span><span class="no">ADD_SERVICE_TRANSACTION</span><span class="o">,</span> <span class="n">data</span><span class="o">,</span> <span class="n">reply</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+    <span class="n">reply</span><span class="o">.</span><span class="na">recycle</span><span class="o">();</span>
+    <span class="n">data</span><span class="o">.</span><span class="na">recycle</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="writestrongbinder">writeStrongBinder</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">writeStrongBinder</span><span class="o">(</span><span class="nc">IBinder</span> <span class="n">val</span><span class="o">){</span>
+    <span class="c1">//此处为Native调用【见3.5.1】</span>
+    <span class="n">nativewriteStrongBinder</span><span class="o">(</span><span class="n">mNativePtr</span><span class="o">,</span> <span class="n">val</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>最终调用了<strong>android_os_Parcel_writeStrongBinder方法</strong></p>
+
+<h3 id="android_os_parcel_writestrongbinder"><strong>android_os_Parcel_writeStrongBinder</strong></h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">static</span> <span class="kt">void</span> <span class="nf">android_os_Parcel_writeStrongBinder</span><span class="o">(</span><span class="nc">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="o">,</span> <span class="n">jclass</span> <span class="n">clazz</span><span class="o">,</span> <span class="n">jlong</span> <span class="n">nativePtr</span><span class="o">,</span> <span class="n">jobject</span> <span class="n">object</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">//将java层Parcel转换为native层Parcel</span>
+    <span class="nc">Parcel</span><span class="o">*</span> <span class="n">parcel</span> <span class="o">=</span> <span class="n">reinterpret_cast</span><span class="o">&lt;</span><span class="nc">Parcel</span><span class="o">*&gt;(</span><span class="n">nativePtr</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">parcel</span> <span class="o">!=</span> <span class="no">NULL</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">//【见3.5.2】</span>
+        <span class="kd">const</span> <span class="n">status_t</span> <span class="n">err</span> <span class="o">=</span> <span class="n">parcel</span><span class="o">-&gt;</span><span class="n">writeStrongBinder</span><span class="o">(</span><span class="n">ibinderForJavaObject</span><span class="o">(</span><span class="n">env</span><span class="o">,</span> <span class="n">object</span><span class="o">));</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">err</span> <span class="o">!=</span> <span class="no">NO_ERROR</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">signalExceptionForError</span><span class="o">(</span><span class="n">env</span><span class="o">,</span> <span class="n">clazz</span><span class="o">,</span> <span class="n">err</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="ibinderforjavaobject">ibinderForJavaObject</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sp</span><span class="o">&lt;</span><span class="nc">IBinder</span><span class="o">&gt;</span> <span class="nf">ibinderForJavaObject</span><span class="o">(</span><span class="nc">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="o">,</span> <span class="n">jobject</span> <span class="n">obj</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">obj</span> <span class="o">==</span> <span class="no">NULL</span><span class="o">)</span> <span class="k">return</span> <span class="no">NULL</span><span class="o">;</span>
+
+    <span class="c1">//Java层的Binder对象</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">env</span><span class="o">-&gt;</span><span class="nc">IsInstanceOf</span><span class="o">(</span><span class="n">obj</span><span class="o">,</span> <span class="n">gBinderOffsets</span><span class="o">.</span><span class="na">mClass</span><span class="o">))</span> <span class="o">{</span>
+        <span class="nc">JavaBBinderHolder</span><span class="o">*</span> <span class="n">jbh</span> <span class="o">=</span> <span class="o">(</span><span class="nc">JavaBBinderHolder</span><span class="o">*)</span>
+            <span class="n">env</span><span class="o">-&gt;</span><span class="nc">GetLongField</span><span class="o">(</span><span class="n">obj</span><span class="o">,</span> <span class="n">gBinderOffsets</span><span class="o">.</span><span class="na">mObject</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">jbh</span> <span class="o">!=</span> <span class="no">NULL</span> <span class="o">?</span> <span class="n">jbh</span><span class="o">-&gt;</span><span class="n">get</span><span class="o">(</span><span class="n">env</span><span class="o">,</span> <span class="n">obj</span><span class="o">)</span> <span class="o">:</span> <span class="no">NULL</span><span class="o">;</span> <span class="c1">//【见3.5.3】</span>
+    <span class="o">}</span>
+    <span class="c1">//Java层的BinderProxy对象</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">env</span><span class="o">-&gt;</span><span class="nc">IsInstanceOf</span><span class="o">(</span><span class="n">obj</span><span class="o">,</span> <span class="n">gBinderProxyOffsets</span><span class="o">.</span><span class="na">mClass</span><span class="o">))</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="o">(</span><span class="nc">IBinder</span><span class="o">*)</span><span class="n">env</span><span class="o">-&gt;</span><span class="nc">GetLongField</span><span class="o">(</span><span class="n">obj</span><span class="o">,</span> <span class="n">gBinderProxyOffsets</span><span class="o">.</span><span class="na">mObject</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="no">NULL</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>根据java创建的bbinder生成JavaBBinderHolder</p>
+
+<h3 id="jbh-getenv-obj">jbh-&gt;get(env, obj)</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sp</span><span class="o">&lt;</span><span class="nc">JavaBBinder</span><span class="o">&gt;</span> <span class="nf">get</span><span class="o">(</span><span class="nc">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="o">,</span> <span class="n">jobject</span> <span class="n">obj</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="nc">AutoMutex</span> <span class="nf">_l</span><span class="o">(</span><span class="n">mLock</span><span class="o">);</span>
+    <span class="n">sp</span><span class="o">&lt;</span><span class="nc">JavaBBinder</span><span class="o">&gt;</span> <span class="n">b</span> <span class="o">=</span> <span class="n">mBinder</span><span class="o">.</span><span class="na">promote</span><span class="o">();</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">b</span> <span class="o">==</span> <span class="no">NULL</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">//首次进来，创建JavaBBinder对象【见3.5.4】</span>
+        <span class="n">b</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">JavaBBinder</span><span class="o">(</span><span class="n">env</span><span class="o">,</span> <span class="n">obj</span><span class="o">);</span>
+        <span class="n">mBinder</span> <span class="o">=</span> <span class="n">b</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="n">b</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>data.writeStrongBinder(service)最终等价于<code class="highlighter-rouge">parcel-&gt;writeStrongBinder(new JavaBBinder(env, obj))</code>;</p>
+
+<h3 id="parcel-writestrongbinder">parcel-&gt;writeStrongBinder</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="nl">Parcel:</span><span class="o">:</span><span class="n">writeStrongBinder</span><span class="o">(</span><span class="kd">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="nc">IBinder</span><span class="o">&gt;&amp;</span> <span class="n">val</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="k">return</span> <span class="nf">flatten_binder</span><span class="o">(</span><span class="nl">ProcessState:</span><span class="o">:</span><span class="n">self</span><span class="o">(),</span> <span class="n">val</span><span class="o">,</span> <span class="k">this</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="flatten_binder">flatten_binder</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="nf">flatten_binder</span><span class="o">(</span><span class="kd">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="nc">ProcessState</span><span class="o">&gt;&amp;</span> <span class="cm">/*proc*/</span><span class="o">,</span>
+    <span class="kd">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="nc">IBinder</span><span class="o">&gt;&amp;</span> <span class="n">binder</span><span class="o">,</span> <span class="nc">Parcel</span><span class="o">*</span> <span class="n">out</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="n">flat_binder_object</span> <span class="n">obj</span><span class="o">;</span>
+
+    <span class="n">obj</span><span class="o">.</span><span class="na">flags</span> <span class="o">=</span> <span class="mh">0x7f</span> <span class="o">|</span> <span class="no">FLAT_BINDER_FLAG_ACCEPTS_FDS</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">binder</span> <span class="o">!=</span> <span class="no">NULL</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">IBinder</span> <span class="o">*</span><span class="n">local</span> <span class="o">=</span> <span class="n">binder</span><span class="o">-&gt;</span><span class="n">localBinder</span><span class="o">();</span>
+        <span class="k">if</span> <span class="o">(!</span><span class="n">local</span><span class="o">)</span> <span class="o">{</span>
+            <span class="nc">BpBinder</span> <span class="o">*</span><span class="n">proxy</span> <span class="o">=</span> <span class="n">binder</span><span class="o">-&gt;</span><span class="n">remoteBinder</span><span class="o">();</span>
+            <span class="kd">const</span> <span class="n">int32_t</span> <span class="n">handle</span> <span class="o">=</span> <span class="n">proxy</span> <span class="o">?</span> <span class="n">proxy</span><span class="o">-&gt;</span><span class="n">handle</span><span class="o">()</span> <span class="o">:</span> <span class="mi">0</span><span class="o">;</span>
+            <span class="n">obj</span><span class="o">.</span><span class="na">type</span> <span class="o">=</span> <span class="no">BINDER_TYPE_HANDLE</span><span class="o">;</span> <span class="c1">//远程Binder</span>
+            <span class="n">obj</span><span class="o">.</span><span class="na">binder</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+            <span class="n">obj</span><span class="o">.</span><span class="na">handle</span> <span class="o">=</span> <span class="n">handle</span><span class="o">;</span>
+            <span class="n">obj</span><span class="o">.</span><span class="na">cookie</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="n">obj</span><span class="o">.</span><span class="na">type</span> <span class="o">=</span> <span class="no">BINDER_TYPE_BINDER</span><span class="o">;</span> <span class="c1">//本地Binder，进入该分支</span>
+            <span class="n">obj</span><span class="o">.</span><span class="na">binder</span> <span class="o">=</span> <span class="n">reinterpret_cast</span><span class="o">&lt;</span><span class="n">uintptr_t</span><span class="o">&gt;(</span><span class="n">local</span><span class="o">-&gt;</span><span class="n">getWeakRefs</span><span class="o">());</span>
+            <span class="n">obj</span><span class="o">.</span><span class="na">cookie</span> <span class="o">=</span> <span class="n">reinterpret_cast</span><span class="o">&lt;</span><span class="n">uintptr_t</span><span class="o">&gt;(</span><span class="n">local</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+        <span class="n">obj</span><span class="o">.</span><span class="na">type</span> <span class="o">=</span> <span class="no">BINDER_TYPE_BINDER</span><span class="o">;</span>  <span class="c1">//本地Binder</span>
+        <span class="n">obj</span><span class="o">.</span><span class="na">binder</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="n">obj</span><span class="o">.</span><span class="na">cookie</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="c1">//【见小节3.6.2】</span>
+    <span class="k">return</span> <span class="nf">finish_flatten_binder</span><span class="o">(</span><span class="n">binder</span><span class="o">,</span> <span class="n">obj</span><span class="o">,</span> <span class="n">out</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>如果当前的bbinder是实体则创建binder_type_binder如果是引用则创建BINDER_TYPE_HANDLE</p>
+
+<h3 id="finish_flatten_binder"><strong>finish_flatten_binder</strong></h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">inline</span> <span class="kd">static</span> <span class="n">status_t</span> <span class="nf">finish_flatten_binder</span><span class="o">(</span>
+    <span class="kd">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="nc">IBinder</span><span class="o">&gt;&amp;</span> <span class="o">,</span> <span class="kd">const</span> <span class="n">flat_binder_object</span><span class="o">&amp;</span> <span class="n">flat</span><span class="o">,</span> <span class="nc">Parcel</span><span class="o">*</span> <span class="n">out</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="k">return</span> <span class="n">out</span><span class="o">-&gt;</span><span class="n">writeObject</span><span class="o">(</span><span class="n">flat</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>最终将bbinder包装到flat结构体中。</p>
+
+<h3 id="mremotetransact">mRemote.transact</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">transact</span><span class="o">(</span><span class="kt">int</span> <span class="n">code</span><span class="o">,</span> <span class="nc">Parcel</span> <span class="n">data</span><span class="o">,</span> <span class="nc">Parcel</span> <span class="n">reply</span><span class="o">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">RemoteException</span> <span class="o">{</span>
+    <span class="c1">//用于检测Parcel大小是否大于800k</span>
+    <span class="nc">Binder</span><span class="o">.</span><span class="na">checkParcel</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">code</span><span class="o">,</span> <span class="n">data</span><span class="o">,</span> <span class="s">"Unreasonably large binder buffer"</span><span class="o">);</span>
+    <span class="k">return</span> <span class="nf">transactNative</span><span class="o">(</span><span class="n">code</span><span class="o">,</span> <span class="n">data</span><span class="o">,</span> <span class="n">reply</span><span class="o">,</span> <span class="n">flags</span><span class="o">);</span> <span class="c1">//【见3.8】</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="android_os_binderproxy_transact"><strong>android_os_BinderProxy_transact</strong></h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">static</span> <span class="n">jboolean</span> <span class="nf">android_os_BinderProxy_transact</span><span class="o">(</span><span class="nc">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="o">,</span> <span class="n">jobject</span> <span class="n">obj</span><span class="o">,</span>
+    <span class="n">jint</span> <span class="n">code</span><span class="o">,</span> <span class="n">jobject</span> <span class="n">dataObj</span><span class="o">,</span> <span class="n">jobject</span> <span class="n">replyObj</span><span class="o">,</span> <span class="n">jint</span> <span class="n">flags</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="o">...</span>
+    <span class="c1">//java Parcel转为native Parcel</span>
+    <span class="nc">Parcel</span><span class="o">*</span> <span class="n">data</span> <span class="o">=</span> <span class="n">parcelForJavaObject</span><span class="o">(</span><span class="n">env</span><span class="o">,</span> <span class="n">dataObj</span><span class="o">);</span>
+    <span class="nc">Parcel</span><span class="o">*</span> <span class="n">reply</span> <span class="o">=</span> <span class="n">parcelForJavaObject</span><span class="o">(</span><span class="n">env</span><span class="o">,</span> <span class="n">replyObj</span><span class="o">);</span>
+    <span class="o">...</span>
+
+    <span class="c1">//gBinderProxyOffsets.mObject中保存的是new BpBinder(0)对象</span>
+    <span class="nc">IBinder</span><span class="o">*</span> <span class="n">target</span> <span class="o">=</span> <span class="o">(</span><span class="nc">IBinder</span><span class="o">*)</span>
+        <span class="n">env</span><span class="o">-&gt;</span><span class="nc">GetLongField</span><span class="o">(</span><span class="n">obj</span><span class="o">,</span> <span class="n">gBinderProxyOffsets</span><span class="o">.</span><span class="na">mObject</span><span class="o">);</span>
+    <span class="o">...</span>
+
+    <span class="c1">//此处便是BpBinder::transact(), 经过native层，进入Binder驱动程序</span>
+    <span class="n">status_t</span> <span class="n">err</span> <span class="o">=</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">transact</span><span class="o">(</span><span class="n">code</span><span class="o">,</span> <span class="o">*</span><span class="n">data</span><span class="o">,</span> <span class="n">reply</span><span class="o">,</span> <span class="n">flags</span><span class="o">);</span>
+    <span class="o">...</span>
+    <span class="k">return</span> <span class="no">JNI_FALSE</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h1 id="获取服务的过程">获取服务的过程</h1>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="nc">IBinder</span> <span class="nf">getService</span><span class="o">(</span><span class="nc">String</span> <span class="n">name</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">try</span> <span class="o">{</span>
+        <span class="nc">IBinder</span> <span class="n">service</span> <span class="o">=</span> <span class="n">sCache</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">name</span><span class="o">);</span> <span class="c1">//先从缓存中查看</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">service</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="n">service</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="nf">getIServiceManager</span><span class="o">().</span><span class="na">getService</span><span class="o">(</span><span class="n">name</span><span class="o">);</span> <span class="err">【见</span><span class="mf">4.2</span><span class="err">】</span>
+        <span class="o">}</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">RemoteException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">Log</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"error in getService"</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="kc">null</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>getIServiceManager等价于servicemanagerproxy(new binderproxy()),而binderproxy = bpbinder（0）</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">ServiceManagerProxy</span> <span class="kd">implements</span> <span class="nc">IServiceManager</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="nc">IBinder</span> <span class="nf">getService</span><span class="o">(</span><span class="nc">String</span> <span class="n">name</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">RemoteException</span> <span class="o">{</span>
+        <span class="nc">Parcel</span> <span class="n">data</span> <span class="o">=</span> <span class="nc">Parcel</span><span class="o">.</span><span class="na">obtain</span><span class="o">();</span>
+        <span class="nc">Parcel</span> <span class="n">reply</span> <span class="o">=</span> <span class="nc">Parcel</span><span class="o">.</span><span class="na">obtain</span><span class="o">();</span>
+        <span class="n">data</span><span class="o">.</span><span class="na">writeInterfaceToken</span><span class="o">(</span><span class="nc">IServiceManager</span><span class="o">.</span><span class="na">descriptor</span><span class="o">);</span>
+        <span class="n">data</span><span class="o">.</span><span class="na">writeString</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+        <span class="c1">//mRemote为BinderProxy 【见4.3】</span>
+        <span class="n">mRemote</span><span class="o">.</span><span class="na">transact</span><span class="o">(</span><span class="no">GET_SERVICE_TRANSACTION</span><span class="o">,</span> <span class="n">data</span><span class="o">,</span> <span class="n">reply</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+        <span class="c1">//从reply里面解析出获取的IBinder对象【见4.8】</span>
+        <span class="nc">IBinder</span> <span class="n">binder</span> <span class="o">=</span> <span class="n">reply</span><span class="o">.</span><span class="na">readStrongBinder</span><span class="o">();</span>
+        <span class="n">reply</span><span class="o">.</span><span class="na">recycle</span><span class="o">();</span>
+        <span class="n">data</span><span class="o">.</span><span class="na">recycle</span><span class="o">();</span>
+        <span class="k">return</span> <span class="n">binder</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="binderproxytransact">binderproxy.transact</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">final</span> <span class="kd">class</span> <span class="nc">BinderProxy</span> <span class="kd">implements</span> <span class="nc">IBinder</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">transact</span><span class="o">(</span><span class="kt">int</span> <span class="n">code</span><span class="o">,</span> <span class="nc">Parcel</span> <span class="n">data</span><span class="o">,</span> <span class="nc">Parcel</span> <span class="n">reply</span><span class="o">,</span> <span class="kt">int</span> <span class="n">flags</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">RemoteException</span> <span class="o">{</span>
+        <span class="nc">Binder</span><span class="o">.</span><span class="na">checkParcel</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">code</span><span class="o">,</span> <span class="n">data</span><span class="o">,</span> <span class="s">"Unreasonably large binder buffer"</span><span class="o">);</span>
+        <span class="k">return</span> <span class="nf">transactNative</span><span class="o">(</span><span class="n">code</span><span class="o">,</span> <span class="n">data</span><span class="o">,</span> <span class="n">reply</span><span class="o">,</span> <span class="n">flags</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>transactnative最终调用了android_os_BinderProxy_transact</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">static</span> <span class="n">jboolean</span> <span class="nf">android_os_BinderProxy_transact</span><span class="o">(</span><span class="nc">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="o">,</span> <span class="n">jobject</span> <span class="n">obj</span><span class="o">,</span>
+    <span class="n">jint</span> <span class="n">code</span><span class="o">,</span> <span class="n">jobject</span> <span class="n">dataObj</span><span class="o">,</span> <span class="n">jobject</span> <span class="n">replyObj</span><span class="o">,</span> <span class="n">jint</span> <span class="n">flags</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="o">...</span>
+    <span class="c1">//java Parcel转为native Parcel</span>
+    <span class="nc">Parcel</span><span class="o">*</span> <span class="n">data</span> <span class="o">=</span> <span class="n">parcelForJavaObject</span><span class="o">(</span><span class="n">env</span><span class="o">,</span> <span class="n">dataObj</span><span class="o">);</span>
+    <span class="nc">Parcel</span><span class="o">*</span> <span class="n">reply</span> <span class="o">=</span> <span class="n">parcelForJavaObject</span><span class="o">(</span><span class="n">env</span><span class="o">,</span> <span class="n">replyObj</span><span class="o">);</span>
+    <span class="o">...</span>
+
+    <span class="c1">//gBinderProxyOffsets.mObject中保存的是new BpBinder(0)对象</span>
+    <span class="nc">IBinder</span><span class="o">*</span> <span class="n">target</span> <span class="o">=</span> <span class="o">(</span><span class="nc">IBinder</span><span class="o">*)</span>
+        <span class="n">env</span><span class="o">-&gt;</span><span class="nc">GetLongField</span><span class="o">(</span><span class="n">obj</span><span class="o">,</span> <span class="n">gBinderProxyOffsets</span><span class="o">.</span><span class="na">mObject</span><span class="o">);</span>
+    <span class="o">...</span>
+
+    <span class="c1">//此处便是BpBinder::transact(), 经过native层[见小节4.5]</span>
+    <span class="n">status_t</span> <span class="n">err</span> <span class="o">=</span> <span class="n">target</span><span class="o">-&gt;</span><span class="n">transact</span><span class="o">(</span><span class="n">code</span><span class="o">,</span> <span class="o">*</span><span class="n">data</span><span class="o">,</span> <span class="n">reply</span><span class="o">,</span> <span class="n">flags</span><span class="o">);</span>
+    <span class="o">...</span>
+    <span class="k">return</span> <span class="no">JNI_FALSE</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>其中gBinderProxyOffsets拿到bpbinder(0)的对象，最终调用transact将数据发送给binder启动。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="nl">BpBinder:</span><span class="o">:</span><span class="n">transact</span><span class="o">(</span>
+    <span class="n">uint32_t</span> <span class="n">code</span><span class="o">,</span> <span class="kd">const</span> <span class="nc">Parcel</span><span class="o">&amp;</span> <span class="n">data</span><span class="o">,</span> <span class="nc">Parcel</span><span class="o">*</span> <span class="n">reply</span><span class="o">,</span> <span class="n">uint32_t</span> <span class="n">flags</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">mAlive</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// [见小节4.6]</span>
+        <span class="n">status_t</span> <span class="n">status</span> <span class="o">=</span> <span class="nl">IPCThreadState:</span><span class="o">:</span><span class="n">self</span><span class="o">()-&gt;</span><span class="n">transact</span><span class="o">(</span>
+            <span class="n">mHandle</span><span class="o">,</span> <span class="n">code</span><span class="o">,</span> <span class="n">data</span><span class="o">,</span> <span class="n">reply</span><span class="o">,</span> <span class="n">flags</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">status</span> <span class="o">==</span> <span class="no">DEAD_OBJECT</span><span class="o">)</span> <span class="n">mAlive</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="k">return</span> <span class="n">status</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="k">return</span> <span class="no">DEAD_OBJECT</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="ipcthreadstatetransact">ipcthreadstate.transact</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="nl">IPCThreadState:</span><span class="o">:</span><span class="n">transact</span><span class="o">(</span><span class="n">int32_t</span> <span class="n">handle</span><span class="o">,</span>
+                                  <span class="n">uint32_t</span> <span class="n">code</span><span class="o">,</span> <span class="kd">const</span> <span class="nc">Parcel</span><span class="o">&amp;</span> <span class="n">data</span><span class="o">,</span>
+                                  <span class="nc">Parcel</span><span class="o">*</span> <span class="n">reply</span><span class="o">,</span> <span class="n">uint32_t</span> <span class="n">flags</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="n">status_t</span> <span class="n">err</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="na">errorCheck</span><span class="o">();</span> <span class="c1">//数据错误检查</span>
+    <span class="n">flags</span> <span class="o">|=</span> <span class="no">TF_ACCEPT_FDS</span><span class="o">;</span>
+    <span class="o">....</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">err</span> <span class="o">==</span> <span class="no">NO_ERROR</span><span class="o">)</span> <span class="o">{</span>
+         <span class="c1">// 传输数据</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">writeTransactionData</span><span class="o">(</span><span class="no">BC_TRANSACTION</span><span class="o">,</span> <span class="n">flags</span><span class="o">,</span> <span class="n">handle</span><span class="o">,</span> <span class="n">code</span><span class="o">,</span> <span class="n">data</span><span class="o">,</span> <span class="no">NULL</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="o">...</span>
+
+    <span class="c1">// 默认情况下,都是采用非oneway的方式, 也就是需要等待服务端的返回结果</span>
+    <span class="k">if</span> <span class="o">((</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="no">TF_ONE_WAY</span><span class="o">)</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">reply</span><span class="o">)</span> <span class="o">{</span>
+            <span class="c1">//等待回应事件</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="n">waitForResponse</span><span class="o">(</span><span class="n">reply</span><span class="o">);</span>
+        <span class="o">}</span><span class="k">else</span> <span class="o">{</span>
+            <span class="nc">Parcel</span> <span class="n">fakeReply</span><span class="o">;</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="n">waitForResponse</span><span class="o">(&amp;</span><span class="n">fakeReply</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">waitForResponse</span><span class="o">(</span><span class="no">NULL</span><span class="o">,</span> <span class="no">NULL</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="n">err</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="waitforresponse">waitForResponse</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="nl">IPCThreadState:</span><span class="o">:</span><span class="n">waitForResponse</span><span class="o">(</span><span class="nc">Parcel</span> <span class="o">*</span><span class="n">reply</span><span class="o">,</span> <span class="n">status_t</span> <span class="o">*</span><span class="n">acquireResult</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="n">int32_t</span> <span class="n">cmd</span><span class="o">;</span>
+    <span class="n">int32_t</span> <span class="n">err</span><span class="o">;</span>
+    <span class="k">while</span> <span class="o">(</span><span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">((</span><span class="n">err</span><span class="o">=</span><span class="n">talkWithDriver</span><span class="o">())</span> <span class="o">&lt;</span> <span class="no">NO_ERROR</span><span class="o">)</span> <span class="k">break</span><span class="o">;</span>
+        <span class="o">...</span>
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">mIn</span><span class="o">.</span><span class="na">readInt32</span><span class="o">();</span>
+        <span class="k">switch</span> <span class="o">(</span><span class="n">cmd</span><span class="o">)</span> <span class="o">{</span>
+          <span class="k">case</span> <span class="nl">BR_REPLY:</span>
+          <span class="o">{</span>
+            <span class="n">binder_transaction_data</span> <span class="n">tr</span><span class="o">;</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="n">mIn</span><span class="o">.</span><span class="na">read</span><span class="o">(&amp;</span><span class="n">tr</span><span class="o">,</span> <span class="n">sizeof</span><span class="o">(</span><span class="n">tr</span><span class="o">));</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">reply</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">if</span> <span class="o">((</span><span class="n">tr</span><span class="o">.</span><span class="na">flags</span> <span class="o">&amp;</span> <span class="no">TF_STATUS_CODE</span><span class="o">)</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="c1">//当reply对象回收时，则会调用freeBuffer来回收内存</span>
+                    <span class="n">reply</span><span class="o">-&gt;</span><span class="n">ipcSetDataReference</span><span class="o">(</span>
+                        <span class="n">reinterpret_cast</span><span class="o">&lt;</span><span class="kd">const</span> <span class="n">uint8_t</span><span class="o">*&gt;(</span><span class="n">tr</span><span class="o">.</span><span class="na">data</span><span class="o">.</span><span class="na">ptr</span><span class="o">.</span><span class="na">buffer</span><span class="o">),</span>
+                        <span class="n">tr</span><span class="o">.</span><span class="na">data_size</span><span class="o">,</span>
+                        <span class="n">reinterpret_cast</span><span class="o">&lt;</span><span class="kd">const</span> <span class="n">binder_size_t</span><span class="o">*&gt;(</span><span class="n">tr</span><span class="o">.</span><span class="na">data</span><span class="o">.</span><span class="na">ptr</span><span class="o">.</span><span class="na">offsets</span><span class="o">),</span>
+                        <span class="n">tr</span><span class="o">.</span><span class="na">offsets_size</span><span class="o">/</span><span class="n">sizeof</span><span class="o">(</span><span class="n">binder_size_t</span><span class="o">),</span>
+                        <span class="n">freeBuffer</span><span class="o">,</span> <span class="k">this</span><span class="o">);</span>
+                <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                    <span class="o">...</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+          <span class="o">}</span>
+          <span class="k">case</span> <span class="o">:...</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+    <span class="o">...</span>
+    <span class="k">return</span> <span class="n">err</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="binder_send_reply">binder_send_reply</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">binder_send_reply</span><span class="o">(</span><span class="n">struct</span> <span class="n">binder_state</span> <span class="o">*</span><span class="n">bs</span><span class="o">,</span> <span class="n">struct</span> <span class="n">binder_io</span> <span class="o">*</span><span class="n">reply</span><span class="o">,</span> <span class="n">binder_uintptr_t</span> <span class="n">buffer_to_free</span><span class="o">,</span> <span class="kt">int</span> <span class="n">status</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">struct</span> <span class="o">{</span>
+        <span class="n">uint32_t</span> <span class="n">cmd_free</span><span class="o">;</span>
+        <span class="n">binder_uintptr_t</span> <span class="n">buffer</span><span class="o">;</span>
+        <span class="n">uint32_t</span> <span class="n">cmd_reply</span><span class="o">;</span>
+        <span class="n">struct</span> <span class="n">binder_transaction_data</span> <span class="n">txn</span><span class="o">;</span>
+    <span class="o">}</span> <span class="n">__attribute__</span><span class="o">((</span><span class="n">packed</span><span class="o">))</span> <span class="n">data</span><span class="o">;</span>
+
+    <span class="n">data</span><span class="o">.</span><span class="na">cmd_free</span> <span class="o">=</span> <span class="no">BC_FREE_BUFFER</span><span class="o">;</span> <span class="c1">//free buffer命令</span>
+    <span class="n">data</span><span class="o">.</span><span class="na">buffer</span> <span class="o">=</span> <span class="n">buffer_to_free</span><span class="o">;</span>
+    <span class="n">data</span><span class="o">.</span><span class="na">cmd_reply</span> <span class="o">=</span> <span class="no">BC_REPLY</span><span class="o">;</span> <span class="c1">// reply命令</span>
+    <span class="n">data</span><span class="o">.</span><span class="na">txn</span><span class="o">.</span><span class="na">target</span><span class="o">.</span><span class="na">ptr</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="n">data</span><span class="o">.</span><span class="na">txn</span><span class="o">.</span><span class="na">cookie</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="n">data</span><span class="o">.</span><span class="na">txn</span><span class="o">.</span><span class="na">code</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">status</span><span class="o">)</span> <span class="o">{</span>
+        <span class="o">...</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{=</span>
+
+        <span class="n">data</span><span class="o">.</span><span class="na">txn</span><span class="o">.</span><span class="na">flags</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="n">data</span><span class="o">.</span><span class="na">txn</span><span class="o">.</span><span class="na">data_size</span> <span class="o">=</span> <span class="n">reply</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">-</span> <span class="n">reply</span><span class="o">-&gt;</span><span class="n">data0</span><span class="o">;</span>
+        <span class="n">data</span><span class="o">.</span><span class="na">txn</span><span class="o">.</span><span class="na">offsets_size</span> <span class="o">=</span> <span class="o">((</span><span class="kt">char</span><span class="o">*)</span> <span class="n">reply</span><span class="o">-&gt;</span><span class="n">offs</span><span class="o">)</span> <span class="o">-</span> <span class="o">((</span><span class="kt">char</span><span class="o">*)</span> <span class="n">reply</span><span class="o">-&gt;</span><span class="n">offs0</span><span class="o">);</span>
+        <span class="n">data</span><span class="o">.</span><span class="na">txn</span><span class="o">.</span><span class="na">data</span><span class="o">.</span><span class="na">ptr</span><span class="o">.</span><span class="na">buffer</span> <span class="o">=</span> <span class="o">(</span><span class="n">uintptr_t</span><span class="o">)</span><span class="n">reply</span><span class="o">-&gt;</span><span class="n">data0</span><span class="o">;</span>
+        <span class="n">data</span><span class="o">.</span><span class="na">txn</span><span class="o">.</span><span class="na">data</span><span class="o">.</span><span class="na">ptr</span><span class="o">.</span><span class="na">offsets</span> <span class="o">=</span> <span class="o">(</span><span class="n">uintptr_t</span><span class="o">)</span><span class="n">reply</span><span class="o">-&gt;</span><span class="n">offs0</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="c1">//向Binder驱动通信</span>
+    <span class="n">binder_write</span><span class="o">(</span><span class="n">bs</span><span class="o">,</span> <span class="o">&amp;</span><span class="n">data</span><span class="o">,</span> <span class="n">sizeof</span><span class="o">(</span><span class="n">data</span><span class="o">));</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>将bc_reply写入结构体中，请求服务的进程执行talkWithDriver时执行到binder_thread_read，处理ToDo队列中的事物。</p>
+
+<h3 id="readstrongbinder">readStrongBinder</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">static</span> <span class="n">jobject</span> <span class="nf">android_os_Parcel_readStrongBinder</span><span class="o">(</span><span class="nc">JNIEnv</span><span class="o">*</span> <span class="n">env</span><span class="o">,</span> <span class="n">jclass</span> <span class="n">clazz</span><span class="o">,</span> <span class="n">jlong</span> <span class="n">nativePtr</span><span class="o">)</span> <span class="o">{</span>
+    <span class="nc">Parcel</span><span class="o">*</span> <span class="n">parcel</span> <span class="o">=</span> <span class="n">reinterpret_cast</span><span class="o">&lt;</span><span class="nc">Parcel</span><span class="o">*&gt;(</span><span class="n">nativePtr</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">parcel</span> <span class="o">!=</span> <span class="no">NULL</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">//【见小节4.8.1】</span>
+        <span class="k">return</span> <span class="nf">javaObjectForIBinder</span><span class="o">(</span><span class="n">env</span><span class="o">,</span> <span class="n">parcel</span><span class="o">-&gt;</span><span class="n">readStrongBinder</span><span class="o">());</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="no">NULL</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>将native层的bpbinder对象转换为Java层的binderproxy。</p>
+
+<h3 id="parcel-readstrongbinder">parcel-&gt;readStrongBinder</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sp</span><span class="o">&lt;</span><span class="nc">IBinder</span><span class="o">&gt;</span> <span class="nl">Parcel:</span><span class="o">:</span><span class="n">readStrongBinder</span><span class="o">()</span> <span class="kd">const</span>
+<span class="o">{</span>
+    <span class="n">sp</span><span class="o">&lt;</span><span class="nc">IBinder</span><span class="o">&gt;</span> <span class="n">val</span><span class="o">;</span>
+    <span class="c1">//【见小节4.8.2】</span>
+    <span class="n">unflatten_binder</span><span class="o">(</span><span class="nl">ProcessState:</span><span class="o">:</span><span class="n">self</span><span class="o">(),</span> <span class="o">*</span><span class="k">this</span><span class="o">,</span> <span class="o">&amp;</span><span class="n">val</span><span class="o">);</span>
+    <span class="k">return</span> <span class="n">val</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="unflatten_binder">unflatten_binder</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="nf">unflatten_binder</span><span class="o">(</span><span class="kd">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="nc">ProcessState</span><span class="o">&gt;&amp;</span> <span class="n">proc</span><span class="o">,</span>
+    <span class="kd">const</span> <span class="nc">Parcel</span><span class="o">&amp;</span> <span class="n">in</span><span class="o">,</span> <span class="n">sp</span><span class="o">&lt;</span><span class="nc">IBinder</span><span class="o">&gt;*</span> <span class="n">out</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="kd">const</span> <span class="n">flat_binder_object</span><span class="o">*</span> <span class="n">flat</span> <span class="o">=</span> <span class="n">in</span><span class="o">.</span><span class="na">readObject</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">flat</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">switch</span> <span class="o">(</span><span class="n">flat</span><span class="o">-&gt;</span><span class="n">type</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">case</span> <span class="nl">BINDER_TYPE_BINDER:</span>
+                <span class="o">*</span><span class="n">out</span> <span class="o">=</span> <span class="n">reinterpret_cast</span><span class="o">&lt;</span><span class="nc">IBinder</span><span class="o">*&gt;(</span><span class="n">flat</span><span class="o">-&gt;</span><span class="n">cookie</span><span class="o">);</span>
+                <span class="k">return</span> <span class="nf">finish_unflatten_binder</span><span class="o">(</span><span class="no">NULL</span><span class="o">,</span> <span class="o">*</span><span class="n">flat</span><span class="o">,</span> <span class="n">in</span><span class="o">);</span>
+            <span class="k">case</span> <span class="nl">BINDER_TYPE_HANDLE:</span>
+                <span class="c1">//进入该分支【见4.8.3】</span>
+                <span class="o">*</span><span class="n">out</span> <span class="o">=</span> <span class="n">proc</span><span class="o">-&gt;</span><span class="n">getStrongProxyForHandle</span><span class="o">(</span><span class="n">flat</span><span class="o">-&gt;</span><span class="n">handle</span><span class="o">);</span>
+                <span class="c1">//创建BpBinder对象</span>
+                <span class="k">return</span> <span class="nf">finish_unflatten_binder</span><span class="o">(</span>
+                    <span class="n">static_cast</span><span class="o">&lt;</span><span class="nc">BpBinder</span><span class="o">*&gt;(</span><span class="n">out</span><span class="o">-&gt;</span><span class="n">get</span><span class="o">()),</span> <span class="o">*</span><span class="n">flat</span><span class="o">,</span> <span class="n">in</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="no">BAD_TYPE</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="getstrongproxyforhandle">getStrongProxyForHandle</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sp</span><span class="o">&lt;</span><span class="nc">IBinder</span><span class="o">&gt;</span> <span class="nl">ProcessState:</span><span class="o">:</span><span class="n">getStrongProxyForHandle</span><span class="o">(</span><span class="n">int32_t</span> <span class="n">handle</span><span class="o">)</span>
+<span class="o">{</span>
+    <span class="n">sp</span><span class="o">&lt;</span><span class="nc">IBinder</span><span class="o">&gt;</span> <span class="n">result</span><span class="o">;</span>
+
+    <span class="nc">AutoMutex</span> <span class="nf">_l</span><span class="o">(</span><span class="n">mLock</span><span class="o">);</span>
+    <span class="c1">//查找handle对应的资源项</span>
+    <span class="n">handle_entry</span><span class="o">*</span> <span class="n">e</span> <span class="o">=</span> <span class="n">lookupHandleLocked</span><span class="o">(</span><span class="n">handle</span><span class="o">);</span>
+
+    <span class="k">if</span> <span class="o">(</span><span class="n">e</span> <span class="o">!=</span> <span class="no">NULL</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">IBinder</span><span class="o">*</span> <span class="n">b</span> <span class="o">=</span> <span class="n">e</span><span class="o">-&gt;</span><span class="n">binder</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">b</span> <span class="o">==</span> <span class="no">NULL</span> <span class="o">||</span> <span class="o">!</span><span class="n">e</span><span class="o">-&gt;</span><span class="n">refs</span><span class="o">-&gt;</span><span class="n">attemptIncWeak</span><span class="o">(</span><span class="k">this</span><span class="o">))</span> <span class="o">{</span>
+            <span class="o">...</span>
+            <span class="c1">//当handle值所对应的IBinder不存在或弱引用无效时，则创建BpBinder对象</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">BpBinder</span><span class="o">(</span><span class="n">handle</span><span class="o">);</span>
+            <span class="n">e</span><span class="o">-&gt;</span><span class="n">binder</span> <span class="o">=</span> <span class="n">b</span><span class="o">;</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">b</span><span class="o">)</span> <span class="n">e</span><span class="o">-&gt;</span><span class="n">refs</span> <span class="o">=</span> <span class="n">b</span><span class="o">-&gt;</span><span class="n">getWeakRefs</span><span class="o">();</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">b</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="n">result</span><span class="o">.</span><span class="na">force_set</span><span class="o">(</span><span class="n">b</span><span class="o">);</span>
+            <span class="n">e</span><span class="o">-&gt;</span><span class="n">refs</span><span class="o">-&gt;</span><span class="n">decWeak</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<font color="red">最终将natvie层中指向服务端的bpbinder(handle)转换成了binderproxy对象公客户端调用。<font>
+</font></font>
+
+        </article>
+        <hr>
+
+        
+        
+        
+        
+        
+          <h2 id="similar_posts">Similar Posts</h2>
+            <ul>
+                
+                <li class="relatedPost">
+                    <a href="/2024/07/08/%E5%8C%BF%E5%90%8Dbinder/">十:匿名binder
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+         
+                <li class="relatedPost">
+                    <a href="/2024/06/12/binder%E6%A1%86%E6%9E%B6%E7%B3%BB%E7%BB%9F%E5%88%86%E6%9E%90/">一:Binder系统框架分析
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+                
+            </ul>
+            
+
+            <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2024/07/08/%E5%8C%BF%E5%90%8Dbinder/">十:匿名binder</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+            <!-- <h2 id="comments">Comments</h2>
+        
+
+
+ -->
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+    /**
+     * target _blank
+     */
+    (function () {
+        var aTags = document.querySelectorAll('article a:not([id])')
+        for (var i = 0; i < aTags.length; i++) {
+            aTags[i].setAttribute('target', '_blank')
+        }
+    }());
+</script>
+<script src=" /js/pageContent.js " charset="utf-8"></script>
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+            
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/joshuayingwhat" title="GitHub"><i class="fa fa-github"
+                    aria-hidden="true"></i></a>  
+            <a href="mailto:joshuayingwhat@163.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>       
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github
+                    Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

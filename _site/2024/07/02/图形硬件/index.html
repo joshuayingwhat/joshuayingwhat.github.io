@@ -181,6 +181,8 @@
 <p>其中BufferDescriptor描述了申请的buffer的宽高格式等信息。count表示申请的缓冲区的个数。
 IAllocator 的具体实现在pasthrough.cpp</p>
 
+<p>……</p>
+
 <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">extern</span> <span class="s">"C"</span> <span class="n">IAllocator</span><span class="o">*</span> <span class="nf">HIDL_FETCH_IAllocator</span><span class="p">(</span><span class="k">const</span> <span class="kt">char</span><span class="o">*</span> <span class="cm">/* name */</span><span class="p">)</span> <span class="p">{</span>
     <span class="k">return</span> <span class="n">GrallocLoader</span><span class="o">::</span><span class="n">load</span><span class="p">();</span>
 <span class="p">}</span>
@@ -445,6 +447,13 @@ hwc的hwc2onfbadapter收到请求后，调用framebuffer的fb_post将帧缓冲�
 
         
         
+        
+        
+        
+        
+                
+                
+                
         
         
         
