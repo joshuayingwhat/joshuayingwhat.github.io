@@ -31,3 +31,12 @@ type: page
 
 # 操作系统
 * [jyyOS](https://jyywiki.cn/)
+
+# android blog #
+* [AndroidTechAndPerf](https://www.androidperformance.com/)
+* [Gityuan](http://gityuan.com/)
+# 报刊 #
+* [经济学人(含音频)、纽约客、卫报、连线、大西洋月刊](https://github.com/hehonghui/awesome-english-ebooks)
+
+# other blog # 
+* [酷壳](https://coolshell.cn/)
