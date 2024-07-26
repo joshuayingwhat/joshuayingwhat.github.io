@@ -40,3 +40,7 @@ type: page
 
 # other blog # 
 * [酷壳](https://coolshell.cn/)
+
+# AOsp #
+* [aospxref](http://aospxref.com/)
+* [cs.android](https://cs.android.com/android)
