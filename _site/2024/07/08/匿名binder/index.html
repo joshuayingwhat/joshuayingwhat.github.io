@@ -160,21 +160,21 @@
         <hr>
         <article itemscope itemtype="http://schema.org/BlogPosting">
             
-<p><img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/Untitled.png" alt="" />
+<p><img src="https://s2.loli.net/2024/07/23/SaEgVCqjOdJsuyN.png" alt="" />
 匿名binder是要依托于实名binder而存在的。
 当服务端通过实名binder向客户端传输一个匿名binder，客户端端会接收到一个匿名binder的引用然后可以向位于匿名binder进程发送数据。
 在内核层匿名binder通过实名binder发送给驱动后，驱动会检查当前的flat_binder_obj是否在当前进程有binder_node。</p>
 
 <p>……</p>
 
-<p><img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/Untitled%20(1).png" alt="" />
+<p><img src="https://s2.loli.net/2024/07/23/CPEfGAiWaDtqyOo.png" alt="" />
 如果没有binder就创建一个binder_node指向当前进程，同时也会在clinet进程创建一个binder_ref。
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/Untitled%20(2).png" alt="" />
+<img src="https://s2.loli.net/2024/07/23/WK6mL8yJ4Ta7Gw5.png" alt="" />
 这个binder_ref指向刚才创建的binder_node。这样client通过binder_ref就可以获取到刚才的匿名binder的引用。</p>
 <table><tr><td bgcolor="red">android系统中启动ActvityThread中的ApplicationThread。这个ApplicationThread就是一个匿名binder。</td></tr></table>
 
-<p><img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/Untitled%20(3).png" alt="" />
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/Untitled%20(4).png" alt="" />
+<p><img src="https://s2.loli.net/2024/07/23/M8hBzAgTxNsd452.png" alt="" />
+<img src="https://s2.loli.net/2024/07/23/u3Fp1VqjWPyancb.png" alt="" />
 <br />
 其中mgr就是ams在app client端的代理。通过这个实名binder把我们的匿名binder传给ams中。</p>
 
@@ -194,6 +194,13 @@
 
         
         
+        
+        
+        
+        
+                
+                
+                
         
         
         

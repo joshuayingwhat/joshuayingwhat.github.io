@@ -248,22 +248,22 @@ IAllocator 的具体实现在pasthrough.cpp</p>
 
 <p>Allocator.allocate</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>AllocatorImpl.allocateBuffers
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>AllocatorImpl.allocateBuffers
 
     Gralloc0HalImpl.allocateOneBuffer.alloc
 
         gralloc_context_t.gralloc_alloc
 
-            gralloc.gralloc_alloc_buffer ![](https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic1.png) 通过getserice获取gralloc的服务mallocator ![](https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic2.png) 通过gralloc的代理服务mallocator调用allocate，向gralloc进程申请成功得到的缓冲通过outbufferhandles返回给调用者。
+            gralloc.gralloc_alloc_buffer ![](https://s2.loli.net/2024/07/23/Q6vbWdmGKrxVpXE.png) 通过getserice获取gralloc的服务mallocator ![](https://s2.loli.net/2024/07/23/6JpfijhLGPYlgIn.png) 通过gralloc的代理服务mallocator调用allocate，向gralloc进程申请成功得到的缓冲通过outbufferhandles返回给调用者。
 </code></pre></div></div>
 
 <p>最终调用gralloc的gralloc_alloc_buffer分配内存缓冲
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic3.png" alt="" />
+<img src="https://s2.loli.net/2024/07/23/Q3s6tNrlKTxVH8m.png" alt="" />
 通过ashmem_create_region分配内存，最终将分配的内存的文件描述符以buffer_handle_t返回给客户端,客户端通过binder夸进程传输这个文件描述符，拿到文件描述符后就可以通过mmap操作得到缓冲地址。</p>
 <h2 id="图像缓冲"><strong>图像缓冲</strong></h2>
 <p>分配的图像缓冲内存以graphicbuffer表示.创建graphicbuffer阶段初始化就会调用
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic4.png" alt="" />
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic5.png" alt="" />
+<img src="https://s2.loli.net/2024/07/23/eTMwtHpaFZ3YPVJ.png" alt="" />
+<img src="https://s2.loli.net/2024/07/23/WEvNYqaFuPbCyZL.png" alt="" />
 调用gralloc分配缓冲区内存，申请成功后缓冲保存到handle中，使用者得到graphicbuffer对象后取出地址才能保存图形数据。</p>
 <div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="n">GraphicBuffer</span><span class="o">::</span><span class="n">lockAsync</span><span class="p">(</span><span class="kt">uint32_t</span> <span class="n">inUsage</span><span class="p">,</span> <span class="kt">void</span><span class="o">**</span> <span class="n">vaddr</span><span class="p">,</span> <span class="kt">int</span> <span class="n">fenceFd</span><span class="p">,</span>
                                   <span class="kt">int32_t</span><span class="o">*</span> <span class="n">outBytesPerPixel</span><span class="p">,</span> <span class="kt">int32_t</span><span class="o">*</span> <span class="n">outBytesPerStride</span><span class="p">)</span> <span class="p">{</span>
@@ -330,16 +330,16 @@ IAllocator 的具体实现在pasthrough.cpp</p>
 <span class="k">class</span> <span class="nc">HwcLoader</span> <span class="p">{</span>
    <span class="nl">public:</span>
     <span class="k">static</span> <span class="n">IComposer</span><span class="o">*</span> <span class="n">load</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">const</span> <span class="n">hw_module_t</span><span class="o">*</span> <span class="n">module</span> <span class="o">=</span> <span class="n">loadModule</span><span class="p">();</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">module</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">const</span> <span class="n">hw_module_t</span><span class="o">*</span> <span class="k">module</span> <span class="o">=</span> <span class="n">loadModule</span><span class="p">();</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">module</span><span class="p">)</span> <span class="p">{</span>
             <span class="k">return</span> <span class="nb">nullptr</span><span class="p">;</span>
         <span class="p">}</span>
-        <span class="k">auto</span> <span class="n">hal</span> <span class="o">=</span> <span class="n">createHalWithAdapter</span><span class="p">(</span><span class="n">module</span><span class="p">);</span>
+        <span class="k">auto</span> <span class="n">hal</span> <span class="o">=</span> <span class="n">createHalWithAdapter</span><span class="p">(</span><span class="k">module</span><span class="p">);</span>
         <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">hal</span><span class="p">)</span> <span class="p">{</span>
             <span class="k">return</span> <span class="nb">nullptr</span><span class="p">;</span>
         <span class="p">}</span>
 
-        <span class="k">return</span> <span class="n">createComposer</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">hal</span><span class="p">));</span>
+        <span class="k">return</span> <span class="nf">createComposer</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">hal</span><span class="p">));</span>
     <span class="p">}</span>
 </code></pre></div></div>
 <p>加载模块；</p>
@@ -389,7 +389,7 @@ IAllocator 的具体实现在pasthrough.cpp</p>
 客户进程需要把图形缓冲传给hwc进程，在由hwc进程传给显示驱动，通知硬件混合渲染器合成图像，合成好后直接传给显示设备。需要有3个步骤
 <strong>1.创建图层</strong>
 客户进程把图形缓冲传给hwc进程，首先需要创建涂层。
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic6.png" alt="" />
+<img src="https://s2.loli.net/2024/07/23/XmKod6pD3xYEZ1F.png" alt="" />
 向hwc进程请求创建图层</p>
 
 <p>ComposerClientImpl收到请求后转给适配层对象hwchalmpl处理。</p>
@@ -397,11 +397,11 @@ IAllocator 的具体实现在pasthrough.cpp</p>
 <p>hwchalimpl收到请求后交给设备对象处理。</p>
 
 <p>hwcsession继承hwc2_device_t,收到createlayer后交给hwcdisplay处理
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic7.png" alt="" />
+<img src="https://s2.loli.net/2024/07/23/ZINF1sx4Botrgni.png" alt="" />
 将创建的图层存放到layer_map中。
 <strong>2.设置图层缓冲</strong>
 设置好了图层后，客户端将图形缓冲传到hwc进程。composer的setlayerbuffer用于向hwc进程传递客户端进程的图形缓冲
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic9.png" alt="" />
+<img src="https://s2.loli.net/2024/07/23/CkaZBeEi51ALo6x.png" alt="" />
 其中取出graphicbuffer的handle。把handle传到hwc进程。</p>
 
 <p>hwclayer处理setlayerbuffer</p>
@@ -436,10 +436,10 @@ hwcdevice收到commit请求后把图层缓冲数据给到驱动。</p>
 </code></pre></div></div>
 <p><strong>图形库合成</strong>
 合成图形的工作也可以由客户端完成，客户端进程通过图形库合成图形的得到帧缓冲，通过hwc将帧缓冲传给显示驱动。
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic8.png" alt="" />
+<img src="https://s2.loli.net/2024/07/23/BMmfWt2v6Jp18wl.png" alt="" />
 <strong>显示帧缓冲</strong>
 hwc的hwc2onfbadapter收到请求后，调用framebuffer的fb_post将帧缓冲传递到显示驱动上
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/graphic10.png" alt="" />
+<img src="https://s2.loli.net/2024/07/23/WYzMg3fA86RU7lb.png" alt="" />
 通过ioctl将帧缓冲传递到显示驱动，显示驱动收到帧缓冲会把它传给显示设备。</p>
 
         </article>
@@ -450,6 +450,30 @@ hwc的hwc2onfbadapter收到请求后，调用framebuffer的fb_post将帧缓冲�
         
         
         
+          <h2 id="similar_posts">Similar Posts</h2>
+            <ul>
+                
+                <li class="relatedPost">
+                    <a href="/2024/08/01/%E5%9B%BE%E5%BD%A2window%E5%8A%A0%E8%BD%BD%E8%A7%86%E5%9B%BE/">一:图形window加载视图
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
         
                 
                 
@@ -468,14 +492,9 @@ hwc的hwc2onfbadapter收到请求后，调用framebuffer的fb_post将帧缓冲�
                 
                 
                 
-        
-        
-        
-        
                 
-                
-                
-                
+            </ul>
+            
 
             <div class="post-recent">
     <div class="pre">
@@ -510,6 +529,8 @@ hwc的hwc2onfbadapter收到请求后，调用framebuffer的fb_post将帧缓冲�
                     Content
                 </div>
                 <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
                     
                 </ul>
             </div>

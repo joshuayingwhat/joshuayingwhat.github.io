@@ -388,7 +388,7 @@
 <span class="o">}</span>
 </code></pre></div></div>
 
-<p>data.writeStrongBinder(service)最终等价于<code class="highlighter-rouge">parcel-&gt;writeStrongBinder(new JavaBBinder(env, obj))</code>;</p>
+<p>data.writeStrongBinder(service)最终等价于<code class="language-plaintext highlighter-rouge">parcel-&gt;writeStrongBinder(new JavaBBinder(env, obj))</code>;</p>
 
 <h3 id="parcel-writestrongbinder">parcel-&gt;writeStrongBinder</h3>
 
@@ -483,7 +483,7 @@
         <span class="k">if</span> <span class="o">(</span><span class="n">service</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
             <span class="k">return</span> <span class="n">service</span><span class="o">;</span>
         <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
-            <span class="k">return</span> <span class="nf">getIServiceManager</span><span class="o">().</span><span class="na">getService</span><span class="o">(</span><span class="n">name</span><span class="o">);</span> <span class="err">【见</span><span class="mf">4.2</span><span class="err">】</span>
+            <span class="k">return</span> <span class="nf">getIServiceManager</span><span class="o">().</span><span class="na">getService</span><span class="o">(</span><span class="n">name</span><span class="o">);</span> <span class="err">【</span><span class="n">见4</span><span class="o">.</span><span class="mi">2</span><span class="err">】</span>
         <span class="o">}</span>
     <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">RemoteException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
         <span class="nc">Log</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"error in getService"</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
@@ -749,6 +749,13 @@
         
         
         
+        
+                
+                
+                
+        
+        
+        
           <h2 id="similar_posts">Similar Posts</h2>
             <ul>
                 
@@ -804,6 +811,8 @@
     </div>
     <div class="nex">
 
+        
+        <p><strong>下一篇</strong> <a href="/2024/08/01/%E5%9B%BE%E5%BD%A2window%E5%8A%A0%E8%BD%BD%E8%A7%86%E5%9B%BE/">一:图形window加载视图</a></p>
         
     </div>
 </div>

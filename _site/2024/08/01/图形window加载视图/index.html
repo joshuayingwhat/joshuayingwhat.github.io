@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>一:图形window加载视图</title>
+    <meta name="description" content="  window的初始化window的初始化activity加载视图,就相当于是一个容器一样。activitythread中启动activity时调用attach private Activity performLaunchActivity(ActivityClientRecord r, Intent custo...">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2024/08/01/%E5%9B%BE%E5%BD%A2window%E5%8A%A0%E8%BD%BD%E8%A7%86%E5%9B%BE/">
+    <link rel="alternate" type="application/rss+xml" title="joshuayingwhat" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">joshuayingwhat</a>
+        <small>IT Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>一:图形window加载视图</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2024-08-01
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#android" title="Category: android" rel="category">android</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+                
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#%E6%98%BE%E7%A4%BA" title="Tag: 显示" rel="tag">显示</a-->
+        <a href="/tag/#显示" title="Tag: 显示" rel="tag">显示</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+            <ul id="markdown-toc">
+  <li><a href="#window的初始化" id="markdown-toc-window的初始化">window的初始化</a></li>
+  <li><a href="#window添加view过程" id="markdown-toc-window添加view过程">window添加view过程</a></li>
+</ul>
+
+<h1 id="window的初始化">window的初始化</h1>
+<p>activity加载视图,就相当于是一个容器一样。activitythread中启动activity时调用attach</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="kd">private</span> <span class="nc">Activity</span> <span class="nf">performLaunchActivity</span><span class="o">(</span><span class="nc">ActivityClientRecord</span> <span class="n">r</span><span class="o">,</span> <span class="nc">Intent</span> <span class="n">customIntent</span><span class="o">)</span> <span class="o">{</span>
+	 <span class="n">activity</span><span class="o">.</span><span class="na">attach</span><span class="o">(</span><span class="n">appContext</span><span class="o">,</span> <span class="k">this</span><span class="o">,</span> <span class="n">getInstrumentation</span><span class="o">(),</span> <span class="n">r</span><span class="o">.</span><span class="na">token</span><span class="o">,</span>
+                          <span class="n">r</span><span class="o">.</span><span class="na">ident</span><span class="o">,</span> <span class="n">app</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">intent</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">activityInfo</span><span class="o">,</span> <span class="n">title</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">parent</span><span class="o">,</span>
+                         <span class="n">r</span><span class="o">.</span><span class="na">embeddedID</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">lastNonConfigurationInstances</span><span class="o">,</span> <span class="n">config</span><span class="o">,</span>
+                          <span class="n">r</span><span class="o">.</span><span class="na">referrer</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">voiceInteractor</span><span class="o">,</span> <span class="n">window</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">configCallback</span><span class="o">,</span>                          <span class="n">r</span><span class="o">.</span><span class="na">assistToken</span><span class="o">);</span>
+ <span class="o">}</span>
+ 
+ <span class="kd">final</span> <span class="kt">void</span> <span class="nf">attach</span><span class="o">(</span><span class="nc">Context</span> <span class="n">context</span><span class="o">,</span> <span class="nc">ActivityThread</span> <span class="n">aThread</span><span class="o">,...)</span> <span class="o">{</span>
+		  <span class="n">mWindow</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">PhoneWindow</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">window</span><span class="o">,</span> <span class="n">activityConfigCallback</span><span class="o">);</span>
+		  <span class="n">mWindow</span><span class="o">.</span><span class="na">setCallback</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+		  <span class="n">mWindow</span><span class="o">.</span><span class="na">setWindowManager</span><span class="o">(</span>
+                <span class="o">(</span><span class="nc">WindowManager</span><span class="o">)</span><span class="n">context</span><span class="o">.</span><span class="na">getSystemService</span><span class="o">(</span><span class="nc">Context</span><span class="o">.</span><span class="na">WINDOW_SERVICE</span><span class="o">),</span>
+                <span class="n">mToken</span><span class="o">,</span> <span class="n">mComponent</span><span class="o">.</span><span class="na">flattenToString</span><span class="o">(),</span>
+                <span class="o">(</span><span class="n">info</span><span class="o">.</span><span class="na">flags</span> <span class="o">&amp;</span> <span class="nc">ActivityInfo</span><span class="o">.</span><span class="na">FLAG_HARDWARE_ACCELERATED</span><span class="o">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">);</span>
+      <span class="n">mWindowManager</span> <span class="o">=</span> <span class="n">mWindow</span><span class="o">.</span><span class="na">getWindowManager</span><span class="o">();</span>
+ <span class="o">}</span>
+</code></pre></div></div>
+<p>……</p>
+
+<p>这个时候就会创建一个window。从代码中可以看出一个activity只有一个window和一个windowmanager，并且设置windowmanager以及window的setcallback 键盘事件和触摸事件</p>
+<h1 id="window添加view过程">window添加view过程</h1>
+<p>window主要是管理view的增删改的操作。activity启动后调用handleresumeactivity.</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">handleResumeActivity</span><span class="o">(</span><span class="nc">ActivityClientRecord</span> <span class="n">r</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">finalStateRequest</span><span class="o">,</span>
+            <span class="kt">boolean</span> <span class="n">isForward</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">shouldSendCompatFakeFocus</span><span class="o">,</span> <span class="nc">String</span> <span class="n">reason</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="nc">Activity</span> <span class="n">a</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="na">activity</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">localLOGV</span><span class="o">)</span> <span class="o">{</span>
+            <span class="nc">Slog</span><span class="o">.</span><span class="na">v</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"Resume "</span> <span class="o">+</span> <span class="n">r</span> <span class="o">+</span> <span class="s">" started activity: "</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="na">mStartedActivity</span>
+                    <span class="o">+</span> <span class="s">", hideForNow: "</span> <span class="o">+</span> <span class="n">r</span><span class="o">.</span><span class="na">hideForNow</span> <span class="o">+</span> <span class="s">", finished: "</span> <span class="o">+</span> <span class="n">a</span><span class="o">.</span><span class="na">mFinished</span><span class="o">);</span>
+        <span class="o">}</span>
+       
+        <span class="k">if</span> <span class="o">(</span><span class="n">r</span><span class="o">.</span><span class="na">window</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">a</span><span class="o">.</span><span class="na">mFinished</span> <span class="o">&amp;&amp;</span> <span class="n">willBeVisible</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">r</span><span class="o">.</span><span class="na">window</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="na">activity</span><span class="o">.</span><span class="na">getWindow</span><span class="o">();</span>
+            <span class="nc">View</span> <span class="n">decor</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="na">window</span><span class="o">.</span><span class="na">getDecorView</span><span class="o">();</span>
+            <span class="n">decor</span><span class="o">.</span><span class="na">setVisibility</span><span class="o">(</span><span class="nc">View</span><span class="o">.</span><span class="na">INVISIBLE</span><span class="o">);</span>
+            <span class="nc">ViewManager</span> <span class="n">wm</span> <span class="o">=</span> <span class="n">a</span><span class="o">.</span><span class="na">getWindowManager</span><span class="o">();</span>
+            <span class="nc">WindowManager</span><span class="o">.</span><span class="na">LayoutParams</span> <span class="n">l</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="na">window</span><span class="o">.</span><span class="na">getAttributes</span><span class="o">();</span>
+            <span class="n">a</span><span class="o">.</span><span class="na">mDecor</span> <span class="o">=</span> <span class="n">decor</span><span class="o">;</span>
+            <span class="n">l</span><span class="o">.</span><span class="na">type</span> <span class="o">=</span> <span class="nc">WindowManager</span><span class="o">.</span><span class="na">LayoutParams</span><span class="o">.</span><span class="na">TYPE_BASE_APPLICATION</span><span class="o">;</span>
+       
+            <span class="k">if</span> <span class="o">(</span><span class="n">a</span><span class="o">.</span><span class="na">mVisibleFromClient</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">if</span> <span class="o">(!</span><span class="n">a</span><span class="o">.</span><span class="na">mWindowAdded</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">a</span><span class="o">.</span><span class="na">mWindowAdded</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+                    <span class="n">wm</span><span class="o">.</span><span class="na">addView</span><span class="o">(</span><span class="n">decor</span><span class="o">,</span> <span class="n">l</span><span class="o">);</span>
+                <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                    <span class="c1">// The activity will get a callback for this {@link LayoutParams} change</span>
+                    <span class="c1">// earlier. However, at that time the decor will not be set (this is set</span>
+                    <span class="c1">// in this method), so no action will be taken. This call ensures the</span>
+                    <span class="c1">// callback occurs with the decor set.</span>
+                    <span class="n">a</span><span class="o">.</span><span class="na">onWindowAttributesChanged</span><span class="o">(</span><span class="n">l</span><span class="o">);</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+            <span class="c1">// If the window has already been added, but during resume</span>
+            <span class="c1">// we started another activity, then don't yet make the</span>
+            <span class="c1">// window visible.</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(!</span><span class="n">willBeVisible</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">localLOGV</span><span class="o">)</span> <span class="nc">Slog</span><span class="o">.</span><span class="na">v</span><span class="o">(</span><span class="no">TAG</span><span class="o">,</span> <span class="s">"Launch "</span> <span class="o">+</span> <span class="n">r</span> <span class="o">+</span> <span class="s">" mStartedActivity set"</span><span class="o">);</span>
+            <span class="n">r</span><span class="o">.</span><span class="na">hideForNow</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="o">}</span>
+       
+            <span class="k">if</span> <span class="o">(</span><span class="n">r</span><span class="o">.</span><span class="na">activity</span><span class="o">.</span><span class="na">mVisibleFromClient</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">r</span><span class="o">.</span><span class="na">activity</span><span class="o">.</span><span class="na">makeVisible</span><span class="o">();</span>
+            <span class="o">}</span>
+    <span class="o">}</span>
+
+</code></pre></div></div>
+<p>wm.addview就是将decorview 通过windowmanager(wm就是windowmanagerimpl)调用addview</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">addView</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="nc">View</span> <span class="n">view</span><span class="o">,</span> <span class="nd">@NonNull</span> <span class="nc">ViewGroup</span><span class="o">.</span><span class="na">LayoutParams</span> <span class="n">params</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">applyTokens</span><span class="o">(</span><span class="n">params</span><span class="o">);</span>
+        <span class="n">mGlobal</span><span class="o">.</span><span class="na">addView</span><span class="o">(</span><span class="n">view</span><span class="o">,</span> <span class="n">params</span><span class="o">,</span> <span class="n">mContext</span><span class="o">.</span><span class="na">getDisplayNoVerify</span><span class="o">(),</span> <span class="n">mParentWindow</span><span class="o">,</span>
+                <span class="n">mContext</span><span class="o">.</span><span class="na">getUserId</span><span class="o">());</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>最终又是调用到了mglobal中的addview。mglobal就是windowmanagerglobal 在windowmanagerimpl中通过单利初始化windowmanagerglobal(private final WindowManagerGlobal mGlobal = WindowManagerGlobal.getInstance();)因此每个进程只有一个实例</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">addView</span><span class="o">(</span><span class="nc">View</span> <span class="n">view</span><span class="o">,</span> <span class="nc">ViewGroup</span><span class="o">.</span><span class="na">LayoutParams</span> <span class="n">params</span><span class="o">,</span>
+            <span class="nc">Display</span> <span class="n">display</span><span class="o">,</span> <span class="nc">Window</span> <span class="n">parentWindow</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="nc">WindowManager</span><span class="o">.</span><span class="na">LayoutParams</span> <span class="n">wparams</span> <span class="o">=</span> <span class="o">(</span><span class="nc">WindowManager</span><span class="o">.</span><span class="na">LayoutParams</span><span class="o">)</span><span class="n">params</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">parentWindow</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">parentWindow</span><span class="o">.</span><span class="na">adjustLayoutParamsForSubWindow</span><span class="o">(</span><span class="n">wparams</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="c1">// If there's no parent and we're running on L or above (or in the</span>
+            <span class="c1">// system context), assume we want hardware acceleration.</span>
+            <span class="kd">final</span> <span class="nc">Context</span> <span class="n">context</span> <span class="o">=</span> <span class="n">view</span><span class="o">.</span><span class="na">getContext</span><span class="o">();</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">context</span> <span class="o">!=</span> <span class="kc">null</span>
+                    <span class="o">&amp;&amp;</span> <span class="n">context</span><span class="o">.</span><span class="na">getApplicationInfo</span><span class="o">().</span><span class="na">targetSdkVersion</span> <span class="o">&gt;=</span> <span class="nc">Build</span><span class="o">.</span><span class="na">VERSION_CODES</span><span class="o">.</span><span class="na">LOLLIPOP</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">wparams</span><span class="o">.</span><span class="na">flags</span> <span class="o">|=</span> <span class="nc">WindowManager</span><span class="o">.</span><span class="na">LayoutParams</span><span class="o">.</span><span class="na">FLAG_HARDWARE_ACCELERATED</span><span class="o">;</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="nc">ViewRootImpl</span> <span class="n">root</span><span class="o">;</span>
+        <span class="nc">View</span> <span class="n">panelParentView</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="n">root</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ViewRootImpl</span><span class="o">(</span><span class="n">view</span><span class="o">.</span><span class="na">getContext</span><span class="o">(),</span> <span class="n">display</span><span class="o">);</span>
+        <span class="n">view</span><span class="o">.</span><span class="na">setLayoutParams</span><span class="o">(</span><span class="n">wparams</span><span class="o">);</span>
+        <span class="n">mViews</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">view</span><span class="o">);</span>
+        <span class="n">mRoots</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">root</span><span class="o">);</span>
+        <span class="n">mParams</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">wparams</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="c1">// do this last because it fires off messages to start doing things</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">root</span><span class="o">.</span><span class="na">setView</span><span class="o">(</span><span class="n">view</span><span class="o">,</span> <span class="n">wparams</span><span class="o">,</span> <span class="n">panelParentView</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="nc">RuntimeException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">throw</span> <span class="n">e</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>addview时会创建一个viewrootimpl对象调用这个对象的setview。也就是每次addview的时候都会创建一个viewrootimpl的实例。再viewrootimpl中调用session通过binder通信将客户端的请求发送给wsm</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">setView</span><span class="o">(</span><span class="nc">View</span> <span class="n">view</span><span class="o">,</span> <span class="nc">WindowManager</span><span class="o">.</span><span class="na">LayoutParams</span> <span class="n">attrs</span><span class="o">,</span> <span class="nc">View</span> <span class="n">panelParentView</span><span class="o">,</span>
+            <span class="kt">int</span> <span class="n">userId</span><span class="o">)</span> <span class="o">{</span>
+				 <span class="n">res</span> <span class="o">=</span> <span class="n">mWindowSession</span><span class="o">.</span><span class="na">addToDisplayAsUser</span><span class="o">(</span><span class="n">mWindow</span><span class="o">,</span> <span class="n">mWindowAttributes</span><span class="o">,</span>
+                            <span class="n">getHostVisibility</span><span class="o">(),</span> <span class="n">mDisplay</span><span class="o">.</span><span class="na">getDisplayId</span><span class="o">(),</span> <span class="n">userId</span><span class="o">,</span>
+                            <span class="n">mInsetsController</span><span class="o">.</span><span class="na">getRequestedVisibleTypes</span><span class="o">(),</span> <span class="n">inputChannel</span><span class="o">,</span> <span class="n">mTempInsets</span><span class="o">,</span>
+                            <span class="n">mTempControls</span><span class="o">,</span> <span class="n">attachedFrame</span><span class="o">,</span> <span class="n">compatScale</span><span class="o">);</span>	            
+ <span class="o">}</span>
+</code></pre></div></div>
+<p>mwindowsession是再客户端的代理一样通过调用session的addTodisplayAsUser最终会调用到wms中的addWindow
+<img src="https://s2.loli.net/2024/08/01/5wSPXG8K9MNajur.png" alt="" />
+其中mService就是wms。</p>
+
+<p>参考:
+[https://www.jianshu.com/p/b3a1ea7923e7]</p>
+
+        </article>
+        <hr>
+
+        
+        
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+          <h2 id="similar_posts">Similar Posts</h2>
+            <ul>
+                
+                <li class="relatedPost">
+                    <a href="/2024/07/02/%E5%9B%BE%E5%BD%A2%E7%A1%AC%E4%BB%B6/">一:图形硬件(Gralloc,Hardware Composer)
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+                
+            </ul>
+            
+
+            <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2024/07/23/binder%E6%A1%86%E6%9E%B6framework%E5%88%86%E6%9E%90/">十:binder框架framework分析</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+            <!-- <h2 id="comments">Comments</h2>
+        
+
+
+ -->
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+    /**
+     * target _blank
+     */
+    (function () {
+        var aTags = document.querySelectorAll('article a:not([id])')
+        for (var i = 0; i < aTags.length; i++) {
+            aTags[i].setAttribute('target', '_blank')
+        }
+    }());
+</script>
+<script src=" /js/pageContent.js " charset="utf-8"></script>
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+            
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/joshuayingwhat" title="GitHub"><i class="fa fa-github"
+                    aria-hidden="true"></i></a>  
+            <a href="mailto:joshuayingwhat@163.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>       
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github
+                    Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

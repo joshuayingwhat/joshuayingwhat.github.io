@@ -208,15 +208,15 @@ ipc通信机制的一般套路</p>
 
 <p>b进程注册服务那么首先需要运行servicemanager，所以servicemanager需要做一下操作&lt;/br&gt;
 1.open驱动
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/sercice_manager.c.png" alt="" /></p>
+<img src="https://s2.loli.net/2024/07/23/IqRKZm91gtMwNcC.png" alt="" /></p>
 
 <p>2.servicemanager本身需要告诉驱动程序它就是servicemanager
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/service_manager1.c.png" alt="" /></p>
+<img src="https://s2.loli.net/2024/07/23/abfrh1CTvpgu4P9.png" alt="" /></p>
 
 <p>3.while(true) 一个死循环，当有数据的时候才操作执行，没有数据的时候休眠。</p>
 
 <p>3.1 读驱动获取数据
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/binder.c.png" alt="" />
+<img src="https://s2.loli.net/2024/07/23/XW6hDZLKJ7sETbe.png" alt="" />
 res = ioctl(bs-&gt;fd, BINDER_WRITE_READ, &amp;bwr);从驱动里面读取数据</p>
 
 <p>解析数据res = binder_parse(bs, 0, (uintptr_t) readbuf, bwr.read_consumed, func);</p>
@@ -355,14 +355,14 @@ res = ioctl(bs-&gt;fd, BINDER_WRITE_READ, &amp;bwr);从驱动里面读取数据<
 <h3 id="server进程bctest"><strong>server进程（bctest）</strong></h3>
 <h4 id="注册服务的过程"><strong>注册服务的过程:</strong></h4>
 <p>1.open驱动
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/bctest1.c.png" alt="" /></p>
+<img src="https://s2.loli.net/2024/07/23/OPeQoNApqv5VJKa.png" alt="" /></p>
 
 <p>2.注册服务
 2.1:向servicemanager发送调用哪个服务(函数)的名字</p>
 <div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">uint32_t</span> <span class="n">svcmgr</span> <span class="o">=</span> <span class="n">BINDER_SERVICE_MANAGER</span><span class="p">;</span>
 <span class="n">svcmgr_publish</span><span class="p">(</span><span class="n">bs</span><span class="p">,</span> <span class="n">svcmgr</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="o">&amp;</span><span class="n">token</span><span class="p">);</span>
 </code></pre></div></div>
-<p><img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/2024-01-17%2021.33.58.png" alt="" />
+<p><img src="https://s2.loli.net/2024/07/23/KjfgA3bx25JVCFR.png" alt="" />
 其中target=BINDER_SERVICE_MANAGER = 0 = servicemanager；向服务端发送消息</p>
 
 <p>3.while(true)
@@ -407,7 +407,7 @@ res = ioctl(bs-&gt;fd, BINDER_WRITE_READ, &amp;bwr);从驱动里面读取数据<
 
 <p>3.2:解析数据，调用对应的函数</p>
 
-<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    res = binder_parse(bs, reply, (uintptr_t) readbuf, bwr.read_consumed, 0); 解析数据
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    res = binder_parse(bs, reply, (uintptr_t) readbuf, bwr.read_consumed, 0); 解析数据
 </code></pre></div></div>
 
 <h3 id="binder_call分析"><strong>binder_call分析</strong></h3>
@@ -480,10 +480,10 @@ res = ioctl(bs-&gt;fd, BINDER_WRITE_READ, &amp;bwr);从驱动里面读取数据<
                 uint32_t target, uint32_t code)</p>
 
 <p>1.构造函数：放在buffer中，用binder_io来描述；
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/2024-02-18%2018.21.48.png" alt="" /></p>
+<img src="https://s2.loli.net/2024/07/23/ufM1VF4CrjqJzpa.png" alt="" /></p>
 
 <p>2.调用ioctl发送数据；
-<img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/2024-02-18%2018.31.06.png" alt="" /></p>
+<img src="https://s2.loli.net/2024/07/23/DbcOT9xthSoWH46.png" alt="" /></p>
 
 <p>参考连接：
 <a href="https://cs.android.com/android/platform/superproject/+/android-cts-6.0_r28:frameworks/native/cmds/servicemanager/service_manager.c">https://cs.android.com/android/platform/superproject/+/android-cts-6.0_r28:frameworks/native/cmds/servicemanager/service_manager.c</a></p>
@@ -493,6 +493,13 @@ res = ioctl(bs-&gt;fd, BINDER_WRITE_READ, &amp;bwr);从驱动里面读取数据<
 
         
         
+        
+        
+        
+        
+                
+                
+                
         
         
         
