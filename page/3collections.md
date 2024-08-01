@@ -39,9 +39,9 @@ type: page
 # 报刊 #
 * [经济学人(含音频)、纽约客、卫报、连线、大西洋月刊](https://github.com/hehonghui/awesome-english-ebooks)
 
-# other blog # 
-* [酷壳](https://coolshell.cn/)
-
 # AOsp #
 * [aospxref](http://aospxref.com/)
 * [cs.android](https://cs.android.com/android)
+
+# other blog # 
+* [酷壳](https://coolshell.cn/)
