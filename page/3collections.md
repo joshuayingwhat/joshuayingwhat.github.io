@@ -31,6 +31,7 @@ type: page
 
 # 操作系统
 * [jyyOS](https://jyywiki.cn/)
+* [oStep](https://github.com/remzi-arpacidusseau/ostep-translations/tree/master/chinese)
 
 # android blog #
 * [AndroidTechAndPerf](https://www.androidperformance.com/)
