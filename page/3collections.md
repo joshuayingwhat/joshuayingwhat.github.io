@@ -17,6 +17,9 @@ type: page
 * [免费图床](https://smms.app/)
 
     SM.MS
+* [开源阅读器](https://web.koodoreader.com/#/manager/home)
+
+    koodo-reader
 # 编程
 
 ### Kotlin
