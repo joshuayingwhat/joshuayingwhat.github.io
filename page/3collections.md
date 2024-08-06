@@ -31,6 +31,7 @@ type: page
 * [c语言中文网](http://c.biancheng.net/)
 * [learncpp](https://www.learncpp.com/)
 * [cppreference](https://zh.cppreference.com/w/%E9%A6%96%E9%A1%B5)
+* [wscschool](https://www.w3cschool.cn/cpp/)
 
 # 操作系统
 * [jyyOS](https://jyywiki.cn/)
