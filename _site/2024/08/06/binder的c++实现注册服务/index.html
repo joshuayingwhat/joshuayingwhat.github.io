@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>七:binder的C++实现注册服务</title>
+    <meta name="description" content="int main(int argc __unused, char** argv){    ...    InitializeIcuOrDie();    //获得ProcessState实例对象【见小节2.1】    sp&lt;ProcessState&gt; proc(ProcessState::self()...">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2024/08/06/binder%E7%9A%84c++%E5%AE%9E%E7%8E%B0%E6%B3%A8%E5%86%8C%E6%9C%8D%E5%8A%A1/">
+    <link rel="alternate" type="application/rss+xml" title="joshuayingwhat" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">joshuayingwhat</a>
+        <small>IT Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>七:binder的C++实现注册服务</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2024-08-06
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#android" title="Category: android" rel="category">android</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+                
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#binder" title="Tag: binder" rel="tag">binder</a-->
+        <a href="/tag/#binder" title="Tag: binder" rel="tag">binder</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+            <ul id="markdown-toc">
+  <li><a href="#processstateself" id="markdown-toc-processstateself">ProcessState::self()</a></li>
+  <li><a href="#processstate的初始化" id="markdown-toc-processstate的初始化">ProcessState的初始化</a></li>
+  <li><a href="#服务注册" id="markdown-toc-服务注册">服务注册</a></li>
+  <li><a href="#获取bpbinder对象" id="markdown-toc-获取bpbinder对象">获取bpbinder对象</a>    <ul>
+      <li><a href="#1getcontextobject" id="markdown-toc-1getcontextobject">1.getcontextobject</a></li>
+      <li><a href="#2getstrongproxyforhandle" id="markdown-toc-2getstrongproxyforhandle">2.getStrongProxyForHandle</a></li>
+    </ul>
+  </li>
+  <li><a href="#创建bpbinder" id="markdown-toc-创建bpbinder">创建bpbinder</a></li>
+  <li><a href="#bpservicemanageraddservice" id="markdown-toc-bpservicemanageraddservice">bpservicemanager.addservice</a></li>
+  <li><a href="#writestorngbinder" id="markdown-toc-writestorngbinder">writestorngbinder</a></li>
+  <li><a href="#finish_flatten_binder" id="markdown-toc-finish_flatten_binder">finish_flatten_binder</a></li>
+  <li><a href="#bpbindertransact" id="markdown-toc-bpbindertransact">bpbinder::transact</a></li>
+  <li><a href="#ipcthreadstateself" id="markdown-toc-ipcthreadstateself">IPCThreadState::self()</a></li>
+  <li><a href="#ipcthreadstate初始化" id="markdown-toc-ipcthreadstate初始化">IPCThreadState初始化</a></li>
+  <li><a href="#ipctransact" id="markdown-toc-ipctransact">ipc::transact</a></li>
+  <li><a href="#ipcwritetransactiondata" id="markdown-toc-ipcwritetransactiondata">ipc:writeTransactionData</a></li>
+  <li><a href="#waitforresponse" id="markdown-toc-waitforresponse">waitForResponse</a></li>
+  <li><a href="#ipctalkwithdriver" id="markdown-toc-ipctalkwithdriver">IPC.talkWithDriver</a></li>
+</ul>
+
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span> <span class="n">__unused</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="p">...</span>
+    <span class="n">InitializeIcuOrDie</span><span class="p">();</span>
+    <span class="c1">//获得ProcessState实例对象【见小节2.1】</span>
+    <span class="n">sp</span><span class="o">&lt;</span><span class="n">ProcessState</span><span class="o">&gt;</span> <span class="n">proc</span><span class="p">(</span><span class="n">ProcessState</span><span class="o">::</span><span class="n">self</span><span class="p">());</span>
+    <span class="c1">//获取BpServiceManager对象</span>
+    <span class="n">sp</span><span class="o">&lt;</span><span class="n">IServiceManager</span><span class="o">&gt;</span> <span class="n">sm</span> <span class="o">=</span> <span class="n">defaultServiceManager</span><span class="p">();</span>
+    <span class="n">AudioFlinger</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="c1">//注册多媒体服务  【见小节3.1】</span>
+    <span class="n">MediaPlayerService</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="n">ResourceManagerService</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="n">CameraService</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="n">AudioPolicyService</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="n">SoundTriggerHwService</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="n">RadioService</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="n">registerExtensions</span><span class="p">();</span>
+    <span class="c1">//启动Binder线程池</span>
+    <span class="n">ProcessState</span><span class="o">::</span><span class="n">self</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">startThreadPool</span><span class="p">();</span>
+    <span class="c1">//当前线程加入到线程池</span>
+    <span class="n">IPCThreadState</span><span class="o">::</span><span class="n">self</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">joinThreadPool</span><span class="p">();</span>
+ <span class="p">}</span>
+</code></pre></div></div>
+<p>1.打开驱动ProcessState::self()</p>
+
+<p>2.通过defaultServiceManager获取sm对象。</p>
+
+<p>3.开启线程池不断获取客户端发送的数据</p>
+
+<p>……</p>
+
+<h1 id="processstateself">ProcessState::self()</h1>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sp</span><span class="o">&lt;</span><span class="n">ProcessState</span><span class="o">&gt;</span> <span class="n">ProcessState</span><span class="o">::</span><span class="n">self</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="n">Mutex</span><span class="o">::</span><span class="n">Autolock</span> <span class="n">_l</span><span class="p">(</span><span class="n">gProcessMutex</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">gProcess</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">gProcess</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="c1">//实例化ProcessState 【见小节2.2】</span>
+    <span class="n">gProcess</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ProcessState</span><span class="p">;</span>
+    <span class="k">return</span> <span class="n">gProcess</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>实例化processstate，单利保证每个进程只有一个</p>
+<h1 id="processstate的初始化">ProcessState的初始化</h1>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">ProcessState</span><span class="o">::</span><span class="n">ProcessState</span><span class="p">()</span>
+    <span class="o">:</span> <span class="n">mDriverFD</span><span class="p">(</span><span class="n">open_driver</span><span class="p">())</span> <span class="c1">// 打开Binder驱动【见小节2.3】</span>
+    <span class="p">,</span> <span class="n">mVMStart</span><span class="p">(</span><span class="n">MAP_FAILED</span><span class="p">)</span>
+    <span class="p">,</span> <span class="n">mThreadCountLock</span><span class="p">(</span><span class="n">PTHREAD_MUTEX_INITIALIZER</span><span class="p">)</span>
+    <span class="p">,</span> <span class="n">mThreadCountDecrement</span><span class="p">(</span><span class="n">PTHREAD_COND_INITIALIZER</span><span class="p">)</span>
+    <span class="p">,</span> <span class="n">mExecutingThreadsCount</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">,</span> <span class="n">mMaxThreads</span><span class="p">(</span><span class="n">DEFAULT_MAX_BINDER_THREADS</span><span class="p">)</span>
+    <span class="p">,</span> <span class="n">mManagesContexts</span><span class="p">(</span><span class="nb">false</span><span class="p">)</span>
+    <span class="p">,</span> <span class="n">mBinderContextCheckFunc</span><span class="p">(</span><span class="nb">NULL</span><span class="p">)</span>
+    <span class="p">,</span> <span class="n">mBinderContextUserData</span><span class="p">(</span><span class="nb">NULL</span><span class="p">)</span>
+    <span class="p">,</span> <span class="n">mThreadPoolStarted</span><span class="p">(</span><span class="nb">false</span><span class="p">)</span>
+    <span class="p">,</span> <span class="n">mThreadPoolSeq</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mDriverFD</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">//采用内存映射函数mmap，给binder分配一块虚拟地址空间【见小节2.4】</span>
+        <span class="n">mVMStart</span> <span class="o">=</span> <span class="n">mmap</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">BINDER_VM_SIZE</span><span class="p">,</span> <span class="n">PROT_READ</span><span class="p">,</span> <span class="n">MAP_PRIVATE</span> <span class="o">|</span> <span class="n">MAP_NORESERVE</span><span class="p">,</span> <span class="n">mDriverFD</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">mVMStart</span> <span class="o">==</span> <span class="n">MAP_FAILED</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">close</span><span class="p">(</span><span class="n">mDriverFD</span><span class="p">);</span> <span class="c1">//没有足够空间分配给/dev/binder,则关闭驱动</span>
+            <span class="n">mDriverFD</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>打开binder驱动分配内存</p>
+<h1 id="服务注册">服务注册</h1>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="n">MediaPlayerService</span><span class="o">::</span><span class="n">instantiate</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">//注册服务【见小节3.2】</span>
+    <span class="n">defaultServiceManager</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">addService</span><span class="p">(</span><span class="n">String16</span><span class="p">(</span><span class="s">"media.player"</span><span class="p">),</span> <span class="k">new</span> <span class="n">MediaPlayerService</span><span class="p">());</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>调用sm添加服务，传入服务名称和对应的服务处理函数，同是defaultservicemanager也就是bpservicemanager会创建processstate对象和bpbinder对象，入下代码</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sp</span><span class="o">&lt;</span><span class="n">IServiceManager</span><span class="o">&gt;</span> <span class="n">defaultServiceManager</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">gDefaultServiceManager</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="k">return</span> <span class="n">gDefaultServiceManager</span><span class="p">;</span>
+    <span class="p">{</span>
+        <span class="n">AutoMutex</span> <span class="n">_l</span><span class="p">(</span><span class="n">gDefaultServiceManagerLock</span><span class="p">);</span> <span class="c1">//加锁</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">gDefaultServiceManager</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+             <span class="c1">//【见下文小节二,三,四】</span>
+            <span class="n">gDefaultServiceManager</span> <span class="o">=</span> <span class="n">interface_cast</span><span class="o">&lt;</span><span class="n">IServiceManager</span><span class="o">&gt;</span><span class="p">(</span>
+                <span class="n">ProcessState</span><span class="o">::</span><span class="n">self</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">getContextObject</span><span class="p">(</span><span class="nb">NULL</span><span class="p">));</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">gDefaultServiceManager</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span>
+                <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">gDefaultServiceManager</span><span class="p">;</span>
+<span class="p">}</span>
+
+
+<span class="k">const</span> <span class="n">android</span><span class="o">::</span><span class="n">String16</span> <span class="n">IServiceManager</span><span class="o">::</span><span class="n">descriptor</span><span class="p">(</span><span class="err">“</span><span class="n">android</span><span class="p">.</span><span class="n">os</span><span class="p">.</span><span class="n">IServiceManager</span><span class="err">”</span><span class="p">);</span>
+
+<span class="k">const</span> <span class="n">android</span><span class="o">::</span><span class="n">String16</span><span class="o">&amp;</span> <span class="n">IServiceManager</span><span class="o">::</span><span class="n">getInterfaceDescriptor</span><span class="p">()</span> <span class="k">const</span>
+<span class="p">{</span>
+     <span class="k">return</span> <span class="n">IServiceManager</span><span class="o">::</span><span class="n">descriptor</span><span class="p">;</span>
+<span class="p">}</span>
+
+ <span class="n">android</span><span class="o">::</span><span class="n">sp</span><span class="o">&lt;</span><span class="n">IServiceManager</span><span class="o">&gt;</span> <span class="n">IServiceManager</span><span class="o">::</span><span class="n">asInterface</span><span class="p">(</span><span class="k">const</span> <span class="n">android</span><span class="o">::</span><span class="n">sp</span><span class="o">&lt;</span><span class="n">android</span><span class="o">::</span><span class="n">IBinder</span><span class="o">&gt;&amp;</span> <span class="n">obj</span><span class="p">)</span>
+<span class="p">{</span>
+       <span class="n">android</span><span class="o">::</span><span class="n">sp</span><span class="o">&lt;</span><span class="n">IServiceManager</span><span class="o">&gt;</span> <span class="n">intr</span><span class="p">;</span>
+        <span class="k">if</span><span class="p">(</span><span class="n">obj</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+           <span class="n">intr</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">IServiceManager</span> <span class="o">*&gt;</span><span class="p">(</span>
+               <span class="n">obj</span><span class="o">-&gt;</span><span class="n">queryLocalInterface</span><span class="p">(</span><span class="n">IServiceManager</span><span class="o">::</span><span class="n">descriptor</span><span class="p">).</span><span class="n">get</span><span class="p">());</span>
+           <span class="k">if</span> <span class="p">(</span><span class="n">intr</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+               <span class="n">intr</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BpServiceManager</span><span class="p">(</span><span class="n">obj</span><span class="p">);</span>  <span class="c1">//【见小节4.5】</span>
+            <span class="p">}</span>
+        <span class="p">}</span>
+       <span class="k">return</span> <span class="n">intr</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="n">IServiceManager</span><span class="o">::</span><span class="n">IServiceManager</span> <span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
+<span class="n">IServiceManager</span><span class="o">::~</span> <span class="n">IServiceManager</span><span class="p">()</span> <span class="p">{</span> <span class="p">}</span>
+</code></pre></div></div>
+<p>1.processstate::self:创建processstate对象这是一个单利全局只有一个，打开驱动，分配内存给驱动设置最大线程数。</p>
+
+<p>2.getcontextobject:获取bpbinder对象，存在直接返回不存在则创建。</p>
+
+<p>3.interface_cast<IServiceManager>:用于获取bpservicemanager对象</IServiceManager></p>
+<h1 id="获取bpbinder对象">获取bpbinder对象</h1>
+<h2 id="1getcontextobject">1.getcontextobject</h2>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sp</span><span class="o">&lt;</span><span class="n">IBinder</span><span class="o">&gt;</span> <span class="n">ProcessState</span><span class="o">::</span><span class="n">getContextObject</span><span class="p">(</span><span class="k">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="n">IBinder</span><span class="o">&gt;&amp;</span> <span class="cm">/*caller*/</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">getStrongProxyForHandle</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>  <span class="c1">//【见小节3.2】</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>获取handler=0的ibinder对象</p>
+<h2 id="2getstrongproxyforhandle">2.getStrongProxyForHandle</h2>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">sp</span><span class="o">&lt;</span><span class="n">IBinder</span><span class="o">&gt;</span> <span class="n">ProcessState</span><span class="o">::</span><span class="n">getStrongProxyForHandle</span><span class="p">(</span><span class="kt">int32_t</span> <span class="n">handle</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">sp</span><span class="o">&lt;</span><span class="n">IBinder</span><span class="o">&gt;</span> <span class="n">result</span><span class="p">;</span>
+
+    <span class="n">AutoMutex</span> <span class="n">_l</span><span class="p">(</span><span class="n">mLock</span><span class="p">);</span>
+    <span class="c1">//查找handle对应的资源项【见小节3.3】</span>
+    <span class="n">handle_entry</span><span class="o">*</span> <span class="n">e</span> <span class="o">=</span> <span class="n">lookupHandleLocked</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">e</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">IBinder</span><span class="o">*</span> <span class="n">b</span> <span class="o">=</span> <span class="n">e</span><span class="o">-&gt;</span><span class="n">binder</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">b</span> <span class="o">==</span> <span class="nb">NULL</span> <span class="o">||</span> <span class="o">!</span><span class="n">e</span><span class="o">-&gt;</span><span class="n">refs</span><span class="o">-&gt;</span><span class="n">attemptIncWeak</span><span class="p">(</span><span class="k">this</span><span class="p">))</span> <span class="p">{</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">handle</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                <span class="n">Parcel</span> <span class="n">data</span><span class="p">;</span>
+                <span class="c1">//通过ping操作测试binder是否准备就绪</span>
+                <span class="n">status_t</span> <span class="n">status</span> <span class="o">=</span> <span class="n">IPCThreadState</span><span class="o">::</span><span class="n">self</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">transact</span><span class="p">(</span>
+                        <span class="mi">0</span><span class="p">,</span> <span class="n">IBinder</span><span class="o">::</span><span class="n">PING_TRANSACTION</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="o">==</span> <span class="n">DEAD_OBJECT</span><span class="p">)</span>
+                   <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+            <span class="p">}</span>
+            <span class="c1">//当handle值所对应的IBinder不存在或弱引用无效时，则创建BpBinder对象【见小节3.4】</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">BpBinder</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
+            <span class="n">e</span><span class="o">-&gt;</span><span class="n">binder</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="n">e</span><span class="o">-&gt;</span><span class="n">refs</span> <span class="o">=</span> <span class="n">b</span><span class="o">-&gt;</span><span class="n">getWeakRefs</span><span class="p">();</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="n">result</span><span class="p">.</span><span class="n">force_set</span><span class="p">(</span><span class="n">b</span><span class="p">);</span>
+            <span class="n">e</span><span class="o">-&gt;</span><span class="n">refs</span><span class="o">-&gt;</span><span class="n">decWeak</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">result</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>首先调用lookupHandleLocked，判断当前handler对应的bpbinder是否存在如果不存在则创建，如果已经存在就直接获取</p>
+<h1 id="创建bpbinder">创建bpbinder</h1>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">BpBinder</span><span class="o">::</span><span class="n">BpBinder</span><span class="p">(</span><span class="kt">int32_t</span> <span class="n">handle</span><span class="p">)</span>
+    <span class="o">:</span> <span class="n">mHandle</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+    <span class="p">,</span> <span class="n">mAlive</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="p">,</span> <span class="n">mObitsSent</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="p">,</span> <span class="n">mObituaries</span><span class="p">(</span><span class="nb">NULL</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">extendObjectLifetime</span><span class="p">(</span><span class="n">OBJECT_LIFETIME_WEAK</span><span class="p">);</span> <span class="c1">//延长对象的生命时间</span>
+    <span class="n">IPCThreadState</span><span class="o">::</span><span class="n">self</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">incWeakHandle</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span> <span class="c1">//handle所对应的bindle弱引用 + 1</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<h1 id="bpservicemanageraddservice">bpservicemanager.addservice</h1>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">virtual</span> <span class="n">status_t</span> <span class="nf">addService</span><span class="p">(</span><span class="k">const</span> <span class="n">String16</span><span class="o">&amp;</span> <span class="n">name</span><span class="p">,</span> <span class="k">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="n">IBinder</span><span class="o">&gt;&amp;</span> <span class="n">service</span><span class="p">,</span> <span class="kt">bool</span> <span class="n">allowIsolated</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">Parcel</span> <span class="n">data</span><span class="p">,</span> <span class="n">reply</span><span class="p">;</span> <span class="c1">//Parcel是数据通信包</span>
+    <span class="c1">//写入头信息"android.os.IServiceManager"</span>
+    <span class="n">data</span><span class="p">.</span><span class="n">writeInterfaceToken</span><span class="p">(</span><span class="n">IServiceManager</span><span class="o">::</span><span class="n">getInterfaceDescriptor</span><span class="p">());</span>   
+    <span class="n">data</span><span class="p">.</span><span class="n">writeString16</span><span class="p">(</span><span class="n">name</span><span class="p">);</span>        <span class="c1">// name为 "media.player"</span>
+    <span class="n">data</span><span class="p">.</span><span class="n">writeStrongBinder</span><span class="p">(</span><span class="n">service</span><span class="p">);</span> <span class="c1">// MediaPlayerService对象【见小节3.2.1】</span>
+    <span class="n">data</span><span class="p">.</span><span class="n">writeInt32</span><span class="p">(</span><span class="n">allowIsolated</span> <span class="o">?</span> <span class="mi">1</span> <span class="o">:</span> <span class="mi">0</span><span class="p">);</span> <span class="c1">// allowIsolated= false</span>
+    <span class="c1">//remote()指向的是BpBinder对象【见小节3.3】</span>
+    <span class="n">status_t</span> <span class="n">err</span> <span class="o">=</span> <span class="n">remote</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">transact</span><span class="p">(</span><span class="n">ADD_SERVICE_TRANSACTION</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">reply</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">err</span> <span class="o">==</span> <span class="n">NO_ERROR</span> <span class="o">?</span> <span class="n">reply</span><span class="p">.</span><span class="n">readExceptionCode</span><span class="p">()</span> <span class="o">:</span> <span class="n">err</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>向servicemanager注册名为media.player的服务。</p>
+<h1 id="writestorngbinder">writestorngbinder</h1>
+<p>组装一个实体就是bnxxx</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="n">Parcel</span><span class="o">::</span><span class="n">writeStrongBinder</span><span class="p">(</span><span class="k">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="n">IBinder</span><span class="o">&gt;&amp;</span> <span class="n">val</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">flatten_binder</span><span class="p">(</span><span class="n">ProcessState</span><span class="o">::</span><span class="n">self</span><span class="p">(),</span> <span class="n">val</span><span class="p">,</span> <span class="k">this</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="n">status_t</span> <span class="nf">flatten_binder</span><span class="p">(</span><span class="k">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="n">ProcessState</span><span class="o">&gt;&amp;</span> <span class="cm">/*proc*/</span><span class="p">,</span>
+    <span class="k">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="n">IBinder</span><span class="o">&gt;&amp;</span> <span class="n">binder</span><span class="p">,</span> <span class="n">Parcel</span><span class="o">*</span> <span class="n">out</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">flat_binder_object</span> <span class="n">obj</span><span class="p">;</span>
+
+    <span class="n">obj</span><span class="p">.</span><span class="n">flags</span> <span class="o">=</span> <span class="mh">0x7f</span> <span class="o">|</span> <span class="n">FLAT_BINDER_FLAG_ACCEPTS_FDS</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">binder</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">IBinder</span> <span class="o">*</span><span class="n">local</span> <span class="o">=</span> <span class="n">binder</span><span class="o">-&gt;</span><span class="n">localBinder</span><span class="p">();</span> <span class="c1">//本地Binder不为空</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">local</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">BpBinder</span> <span class="o">*</span><span class="n">proxy</span> <span class="o">=</span> <span class="n">binder</span><span class="o">-&gt;</span><span class="n">remoteBinder</span><span class="p">();</span>
+            <span class="k">const</span> <span class="kt">int32_t</span> <span class="n">handle</span> <span class="o">=</span> <span class="n">proxy</span> <span class="o">?</span> <span class="n">proxy</span><span class="o">-&gt;</span><span class="n">handle</span><span class="p">()</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="n">obj</span><span class="p">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">BINDER_TYPE_HANDLE</span><span class="p">;</span>
+            <span class="n">obj</span><span class="p">.</span><span class="n">binder</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+            <span class="n">obj</span><span class="p">.</span><span class="n">handle</span> <span class="o">=</span> <span class="n">handle</span><span class="p">;</span>
+            <span class="n">obj</span><span class="p">.</span><span class="n">cookie</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span> <span class="c1">//进入该分支</span>
+            <span class="n">obj</span><span class="p">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">BINDER_TYPE_BINDER</span><span class="p">;</span>
+            <span class="n">obj</span><span class="p">.</span><span class="n">binder</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">uintptr_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">local</span><span class="o">-&gt;</span><span class="n">getWeakRefs</span><span class="p">());</span>
+            <span class="n">obj</span><span class="p">.</span><span class="n">cookie</span> <span class="o">=</span> <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="kt">uintptr_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">local</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="p">...</span>
+    <span class="p">}</span>
+    <span class="c1">//【见小节3.2.3】</span>
+    <span class="k">return</span> <span class="nf">finish_flatten_binder</span><span class="p">(</span><span class="n">binder</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">out</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>将binder实体扁平化</p>
+<h1 id="finish_flatten_binder">finish_flatten_binder</h1>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kr">inline</span> <span class="k">static</span> <span class="n">status_t</span> <span class="nf">finish_flatten_binder</span><span class="p">(</span>
+    <span class="k">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="n">IBinder</span><span class="o">&gt;&amp;</span> <span class="p">,</span> <span class="k">const</span> <span class="n">flat_binder_object</span><span class="o">&amp;</span> <span class="n">flat</span><span class="p">,</span> <span class="n">Parcel</span><span class="o">*</span> <span class="n">out</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">return</span> <span class="n">out</span><span class="o">-&gt;</span><span class="n">writeObject</span><span class="p">(</span><span class="n">flat</span><span class="p">,</span> <span class="nb">false</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>将binder写入parcel</p>
+<h1 id="bpbindertransact">bpbinder::transact</h1>
+<p>remote-＞调用transact就是bpbinder调用transact。</p>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="n">BpBinder</span><span class="o">::</span><span class="n">transact</span><span class="p">(</span>
+    <span class="kt">uint32_t</span> <span class="n">code</span><span class="p">,</span> <span class="k">const</span> <span class="n">Parcel</span><span class="o">&amp;</span> <span class="n">data</span><span class="p">,</span> <span class="n">Parcel</span><span class="o">*</span> <span class="n">reply</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">flags</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">mAlive</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// code=ADD_SERVICE_TRANSACTION【见小节3.4】</span>
+        <span class="n">status_t</span> <span class="n">status</span> <span class="o">=</span> <span class="n">IPCThreadState</span><span class="o">::</span><span class="n">self</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">transact</span><span class="p">(</span>
+            <span class="n">mHandle</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">reply</span><span class="p">,</span> <span class="n">flags</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="o">==</span> <span class="n">DEAD_OBJECT</span><span class="p">)</span> <span class="n">mAlive</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="k">return</span> <span class="n">status</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">DEAD_OBJECT</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>真正的工作交给了IPCThreadState::self()调用transact函数。</p>
+<h1 id="ipcthreadstateself">IPCThreadState::self()</h1>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">IPCThreadState</span><span class="o">*</span> <span class="n">IPCThreadState</span><span class="o">::</span><span class="n">self</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">gHaveTLS</span><span class="p">)</span> <span class="p">{</span>
+<span class="nl">restart:</span>
+        <span class="k">const</span> <span class="n">pthread_key_t</span> <span class="n">k</span> <span class="o">=</span> <span class="n">gTLS</span><span class="p">;</span>
+        <span class="n">IPCThreadState</span><span class="o">*</span> <span class="n">st</span> <span class="o">=</span> <span class="p">(</span><span class="n">IPCThreadState</span><span class="o">*</span><span class="p">)</span><span class="n">pthread_getspecific</span><span class="p">(</span><span class="n">k</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">st</span><span class="p">)</span> <span class="k">return</span> <span class="n">st</span><span class="p">;</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="n">IPCThreadState</span><span class="p">;</span>  <span class="c1">//初始IPCThreadState 【见小节3.3.2】</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">gShutdown</span><span class="p">)</span> <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+
+    <span class="n">pthread_mutex_lock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">gTLSMutex</span><span class="p">);</span>
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">gHaveTLS</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//首次进入gHaveTLS为false</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">pthread_key_create</span><span class="p">(</span><span class="o">&amp;</span><span class="n">gTLS</span><span class="p">,</span> <span class="n">threadDestructor</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span> <span class="c1">//创建线程的TLS</span>
+            <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">gTLSMutex</span><span class="p">);</span>
+            <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
+        <span class="p">}</span>
+        <span class="n">gHaveTLS</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">pthread_mutex_unlock</span><span class="p">(</span><span class="o">&amp;</span><span class="n">gTLSMutex</span><span class="p">);</span>
+    <span class="k">goto</span> <span class="n">restart</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>从线程的tls中获取IPCThreadState</p>
+
+<p>如果已经有了就从tls中拿，没有就创建。</p>
+<h1 id="ipcthreadstate初始化">IPCThreadState初始化</h1>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">IPCThreadState</span><span class="o">::</span><span class="n">IPCThreadState</span><span class="p">()</span>
+    <span class="o">:</span> <span class="n">mProcess</span><span class="p">(</span><span class="n">ProcessState</span><span class="o">::</span><span class="n">self</span><span class="p">()),</span>
+      <span class="n">mMyThreadId</span><span class="p">(</span><span class="n">gettid</span><span class="p">()),</span>
+      <span class="n">mStrictModePolicy</span><span class="p">(</span><span class="mi">0</span><span class="p">),</span>
+      <span class="n">mLastTransactionBinderFlags</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">pthread_setspecific</span><span class="p">(</span><span class="n">gTLS</span><span class="p">,</span> <span class="k">this</span><span class="p">);</span>
+    <span class="n">clearCaller</span><span class="p">();</span>
+    <span class="n">mIn</span><span class="p">.</span><span class="n">setDataCapacity</span><span class="p">(</span><span class="mi">256</span><span class="p">);</span>
+    <span class="n">mOut</span><span class="p">.</span><span class="n">setDataCapacity</span><span class="p">(</span><span class="mi">256</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>每个线程都有一个IPCThreadState，每个IPCThreadState中都有一个mIn、一个mOut。成员变量mProcess保存了ProcessState变量(每个进程只有一个)。</p>
+<h1 id="ipctransact">ipc::transact</h1>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="n">IPCThreadState</span><span class="o">::</span><span class="n">transact</span><span class="p">(</span><span class="kt">int32_t</span> <span class="n">handle</span><span class="p">,</span>
+                                  <span class="kt">uint32_t</span> <span class="n">code</span><span class="p">,</span> <span class="k">const</span> <span class="n">Parcel</span><span class="o">&amp;</span> <span class="n">data</span><span class="p">,</span>
+                                  <span class="n">Parcel</span><span class="o">*</span> <span class="n">reply</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">flags</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">status_t</span> <span class="n">err</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">errorCheck</span><span class="p">();</span> <span class="c1">//数据错误检查</span>
+    <span class="n">flags</span> <span class="o">|=</span> <span class="n">TF_ACCEPT_FDS</span><span class="p">;</span>
+    <span class="p">....</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">err</span> <span class="o">==</span> <span class="n">NO_ERROR</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// 传输数据 【见小节3.5】</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">writeTransactionData</span><span class="p">(</span><span class="n">BC_TRANSACTION</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="n">handle</span><span class="p">,</span> <span class="n">code</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="p">...</span>
+
+    <span class="k">if</span> <span class="p">((</span><span class="n">flags</span> <span class="o">&amp;</span> <span class="n">TF_ONE_WAY</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">reply</span><span class="p">)</span> <span class="p">{</span>
+            <span class="c1">//等待响应 【见小节3.6】</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="n">waitForResponse</span><span class="p">(</span><span class="n">reply</span><span class="p">);</span>
+        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+            <span class="n">Parcel</span> <span class="n">fakeReply</span><span class="p">;</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="n">waitForResponse</span><span class="p">(</span><span class="o">&amp;</span><span class="n">fakeReply</span><span class="p">);</span>
+        <span class="p">}</span>
+
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="c1">//oneway，则不需要等待reply的场景</span>
+        <span class="n">err</span> <span class="o">=</span> <span class="n">waitForResponse</span><span class="p">(</span><span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="n">err</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>检查数据是否错误;传输数据;等待数据响应。</p>
+<h1 id="ipcwritetransactiondata">ipc:writeTransactionData</h1>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="n">IPCThreadState</span><span class="o">::</span><span class="n">writeTransactionData</span><span class="p">(</span><span class="kt">int32_t</span> <span class="n">cmd</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">binderFlags</span><span class="p">,</span>
+    <span class="kt">int32_t</span> <span class="n">handle</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">code</span><span class="p">,</span> <span class="k">const</span> <span class="n">Parcel</span><span class="o">&amp;</span> <span class="n">data</span><span class="p">,</span> <span class="n">status_t</span><span class="o">*</span> <span class="n">statusBuffer</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">binder_transaction_data</span> <span class="n">tr</span><span class="p">;</span>
+    <span class="n">tr</span><span class="p">.</span><span class="n">target</span><span class="p">.</span><span class="n">ptr</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">tr</span><span class="p">.</span><span class="n">target</span><span class="p">.</span><span class="n">handle</span> <span class="o">=</span> <span class="n">handle</span><span class="p">;</span> <span class="c1">// handle = 0</span>
+    <span class="n">tr</span><span class="p">.</span><span class="n">code</span> <span class="o">=</span> <span class="n">code</span><span class="p">;</span>            <span class="c1">// code = ADD_SERVICE_TRANSACTION</span>
+    <span class="n">tr</span><span class="p">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">binderFlags</span><span class="p">;</span>    <span class="c1">// binderFlags = 0</span>
+    <span class="n">tr</span><span class="p">.</span><span class="n">cookie</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">tr</span><span class="p">.</span><span class="n">sender_pid</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">tr</span><span class="p">.</span><span class="n">sender_euid</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="c1">// data为记录Media服务信息的Parcel对象</span>
+    <span class="k">const</span> <span class="n">status_t</span> <span class="n">err</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">errorCheck</span><span class="p">();</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">err</span> <span class="o">==</span> <span class="n">NO_ERROR</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">tr</span><span class="p">.</span><span class="n">data_size</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">ipcDataSize</span><span class="p">();</span>  <span class="c1">// mDataSize</span>
+        <span class="n">tr</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">ptr</span><span class="p">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">ipcData</span><span class="p">();</span> <span class="c1">//mData</span>
+        <span class="n">tr</span><span class="p">.</span><span class="n">offsets_size</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">ipcObjectsCount</span><span class="p">()</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="n">binder_size_t</span><span class="p">);</span> <span class="c1">//mObjectsSize</span>
+        <span class="n">tr</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">ptr</span><span class="p">.</span><span class="n">offsets</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">ipcObjects</span><span class="p">();</span> <span class="c1">//mObjects</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">statusBuffer</span><span class="p">)</span> <span class="p">{</span>
+        <span class="p">...</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">mLastError</span> <span class="o">=</span> <span class="n">err</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="n">mOut</span><span class="p">.</span><span class="n">writeInt32</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>         <span class="c1">//cmd = BC_TRANSACTION</span>
+    <span class="n">mOut</span><span class="p">.</span><span class="n">write</span><span class="p">(</span><span class="o">&amp;</span><span class="n">tr</span><span class="p">,</span> <span class="k">sizeof</span><span class="p">(</span><span class="n">tr</span><span class="p">));</span>  <span class="c1">//写入binder_transaction_data数据</span>
+    <span class="k">return</span> <span class="n">NO_ERROR</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>其中handle的值用来标识目的端，注册服务过程的目的端为service manager，此处handle=0所对应的是binder_context_mgr_node对象，正是service manager所对应的binder实体对象。binder_transaction_data结构体是binder驱动通信的数据结构，该过程最终是把Binder请求码BC_TRANSACTION和binder_transaction_data结构体写入到mOut</p>
+<h1 id="waitforresponse">waitForResponse</h1>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="n">IPCThreadState</span><span class="o">::</span><span class="n">waitForResponse</span><span class="p">(</span><span class="n">Parcel</span> <span class="o">*</span><span class="n">reply</span><span class="p">,</span> <span class="n">status_t</span> <span class="o">*</span><span class="n">acquireResult</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">int32_t</span> <span class="n">cmd</span><span class="p">;</span>
+    <span class="kt">int32_t</span> <span class="n">err</span><span class="p">;</span>
+    <span class="k">while</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">((</span><span class="n">err</span><span class="o">=</span><span class="n">talkWithDriver</span><span class="p">())</span> <span class="o">&lt;</span> <span class="n">NO_ERROR</span><span class="p">)</span> <span class="k">break</span><span class="p">;</span> <span class="c1">// 【见小节3.7】</span>
+        <span class="p">...</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">mIn</span><span class="p">.</span><span class="n">dataAvail</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">continue</span><span class="p">;</span>
+
+        <span class="n">cmd</span> <span class="o">=</span> <span class="n">mIn</span><span class="p">.</span><span class="n">readInt32</span><span class="p">();</span>
+        <span class="k">switch</span> <span class="p">(</span><span class="n">cmd</span><span class="p">)</span> <span class="p">{</span>
+            <span class="k">case</span> <span class="n">BR_TRANSACTION_COMPLETE</span><span class="p">:</span> <span class="p">...</span>
+            <span class="k">case</span> <span class="n">BR_DEAD_REPLY</span><span class="p">:</span> <span class="p">...</span>
+            <span class="k">case</span> <span class="n">BR_FAILED_REPLY</span><span class="p">:</span> <span class="p">...</span>
+            <span class="k">case</span> <span class="n">BR_ACQUIRE_RESULT</span><span class="p">:</span> <span class="p">...</span>
+            <span class="k">case</span> <span class="n">BR_REPLY</span><span class="p">:</span> <span class="p">...</span>
+                <span class="k">goto</span> <span class="n">finish</span><span class="p">;</span>
+
+            <span class="nl">default:</span>
+                <span class="n">err</span> <span class="o">=</span> <span class="n">executeCommand</span><span class="p">(</span><span class="n">cmd</span><span class="p">);</span>  <span class="c1">//【见小节3.x】</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">err</span> <span class="o">!=</span> <span class="n">NO_ERROR</span><span class="p">)</span> <span class="k">goto</span> <span class="n">finish</span><span class="p">;</span>
+                <span class="k">break</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="p">...</span>
+    <span class="k">return</span> <span class="n">err</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>在waitForResponse过程, 首先执行BR_TRANSACTION_COMPLETE；另外，目标进程收到事务后，处理BR_TRANSACTION事务。 然后发送给当前进程，再执行BR_REPLY命令。</p>
+<h1 id="ipctalkwithdriver">IPC.talkWithDriver</h1>
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">status_t</span> <span class="n">IPCThreadState</span><span class="o">::</span><span class="n">talkWithDriver</span><span class="p">(</span><span class="kt">bool</span> <span class="n">doReceive</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="p">...</span>
+    <span class="n">binder_write_read</span> <span class="n">bwr</span><span class="p">;</span>
+    <span class="k">const</span> <span class="kt">bool</span> <span class="n">needRead</span> <span class="o">=</span> <span class="n">mIn</span><span class="p">.</span><span class="n">dataPosition</span><span class="p">()</span> <span class="o">&gt;=</span> <span class="n">mIn</span><span class="p">.</span><span class="n">dataSize</span><span class="p">();</span>
+    <span class="k">const</span> <span class="kt">size_t</span> <span class="n">outAvail</span> <span class="o">=</span> <span class="p">(</span><span class="o">!</span><span class="n">doReceive</span> <span class="o">||</span> <span class="n">needRead</span><span class="p">)</span> <span class="o">?</span> <span class="n">mOut</span><span class="p">.</span><span class="n">dataSize</span><span class="p">()</span> <span class="o">:</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="n">bwr</span><span class="p">.</span><span class="n">write_size</span> <span class="o">=</span> <span class="n">outAvail</span><span class="p">;</span>
+    <span class="n">bwr</span><span class="p">.</span><span class="n">write_buffer</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">mOut</span><span class="p">.</span><span class="n">data</span><span class="p">();</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">doReceive</span> <span class="o">&amp;&amp;</span> <span class="n">needRead</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">//接收数据缓冲区信息的填充。如果以后收到数据，就直接填在mIn中了。</span>
+        <span class="n">bwr</span><span class="p">.</span><span class="n">read_size</span> <span class="o">=</span> <span class="n">mIn</span><span class="p">.</span><span class="n">dataCapacity</span><span class="p">();</span>
+        <span class="n">bwr</span><span class="p">.</span><span class="n">read_buffer</span> <span class="o">=</span> <span class="p">(</span><span class="kt">uintptr_t</span><span class="p">)</span><span class="n">mIn</span><span class="p">.</span><span class="n">data</span><span class="p">();</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="n">bwr</span><span class="p">.</span><span class="n">read_size</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+        <span class="n">bwr</span><span class="p">.</span><span class="n">read_buffer</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="c1">//当读缓冲和写缓冲都为空，则直接返回</span>
+    <span class="k">if</span> <span class="p">((</span><span class="n">bwr</span><span class="p">.</span><span class="n">write_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="n">bwr</span><span class="p">.</span><span class="n">read_size</span> <span class="o">==</span> <span class="mi">0</span><span class="p">))</span> <span class="k">return</span> <span class="n">NO_ERROR</span><span class="p">;</span>
+
+    <span class="n">bwr</span><span class="p">.</span><span class="n">write_consumed</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">bwr</span><span class="p">.</span><span class="n">read_consumed</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">status_t</span> <span class="n">err</span><span class="p">;</span>
+    <span class="k">do</span> <span class="p">{</span>
+        <span class="c1">//通过ioctl不停的读写操作，跟Binder Driver进行通信</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">ioctl</span><span class="p">(</span><span class="n">mProcess</span><span class="o">-&gt;</span><span class="n">mDriverFD</span><span class="p">,</span> <span class="n">BINDER_WRITE_READ</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">bwr</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">err</span> <span class="o">=</span> <span class="n">NO_ERROR</span><span class="p">;</span>
+        <span class="p">...</span>
+    <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">err</span> <span class="o">==</span> <span class="o">-</span><span class="n">EINTR</span><span class="p">);</span> <span class="c1">//当被中断，则继续执行</span>
+    <span class="p">...</span>
+    <span class="k">return</span> <span class="n">err</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<p>重新将数据组装成bwr最终调用ioctl将数据</p>
+
+<p>发送给驱动</p>
+
+<p>接下来就和c语言binder驱动分析一致了
+Ihelloservice.h中定义了sayhello和sahello_to两个函数。</p>
+
+<p>server端数据结构∶</p>
+
+<p>Ihelloservice.h—＞BnHelloservice.cpp(ontransaction,sayhello,sayhello_to);</p>
+
+<p>test_server:1.接收数据，2.调用ontransaction</p>
+
+<p>client端数据结构∶</p>
+
+<p>Ihelloservice.h—＞BpHelloservice.cpp;</p>
+
+<p>test_client:调用sayhello或者sayhello_to;</p>
+
+<p>共有的收发函数:Binder.c
+<img src="https://s2.loli.net/2024/08/06/8QwsvOaVFqBgCfA.png" alt="" /></p>
+
+<p>BpServiceManager其中handle=0代表在内核中是servicemanager。</p>
+
+<p>BpHelloService的handle= BpServiceManager→getervice(”Hello”)获取到的handle
+<img src="https://s2.loli.net/2024/08/06/nI2AV4TxsoPOSCL.png" alt="" />
+BpInterface———&gt;BpServiceManager</p>
+
+        </article>
+        <hr>
+
+        
+        
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+          <h2 id="similar_posts">Similar Posts</h2>
+            <ul>
+                
+                <li class="relatedPost">
+                    <a href="/2024/07/23/binder%E6%A1%86%E6%9E%B6framework%E5%88%86%E6%9E%90/">九:binder框架framework分析
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+         
+                <li class="relatedPost">
+                    <a href="/2024/07/08/%E5%8C%BF%E5%90%8Dbinder/">十:匿名binder
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+         
+                <li class="relatedPost">
+                    <a href="/2024/06/12/binder%E6%A1%86%E6%9E%B6%E7%B3%BB%E7%BB%9F%E5%88%86%E6%9E%90/">一:Binder系统框架分析
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+                
+            </ul>
+            
+
+            <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2024/08/01/%E5%9B%BE%E5%BD%A2window%E5%8A%A0%E8%BD%BD%E8%A7%86%E5%9B%BE/">一:图形window加载视图</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+            <!-- <h2 id="comments">Comments</h2>
+        
+
+
+ -->
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+    /**
+     * target _blank
+     */
+    (function () {
+        var aTags = document.querySelectorAll('article a:not([id])')
+        for (var i = 0; i < aTags.length; i++) {
+            aTags[i].setAttribute('target', '_blank')
+        }
+    }());
+</script>
+<script src=" /js/pageContent.js " charset="utf-8"></script>
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+            
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/joshuayingwhat" title="GitHub"><i class="fa fa-github"
+                    aria-hidden="true"></i></a>  
+            <a href="mailto:joshuayingwhat@163.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>       
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github
+                    Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

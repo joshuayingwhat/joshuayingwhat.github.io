@@ -113,6 +113,94 @@
       
       <li>
         <h2>
+          <a class="post-link" href="/2024/08/06/binder%E7%9A%84c++%E5%AE%9E%E7%8E%B0%E6%B3%A8%E5%86%8C%E6%9C%8D%E5%8A%A1/">七:binder的C++实现注册服务</a>
+        </h2>
+        <div class="label">
+          <div class="label-card">
+            <i class="fa fa-calendar"></i>2024-08-06
+          </div>
+          <div class="label-card">
+            
+          </div>
+          <div class="label-card">
+            
+          </div>
+
+          <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#android" title="Category: android" rel="category">android</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+          </div>
+
+          <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#binder" title="Tag: binder" rel="tag">binder</a>
+    
+  
+
+</span>
+
+          </div>
+        </div>
+        <div class="excerpt">
+          
+<div class="language-c++ highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span> <span class="n">__unused</span><span class="p">,</span> <span class="kt">char</span><span class="o">**</span> <span class="n">argv</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="p">...</span>
+    <span class="n">InitializeIcuOrDie</span><span class="p">();</span>
+    <span class="c1">//获得ProcessState实例对象【见小节2.1】</span>
+    <span class="n">sp</span><span class="o">&lt;</span><span class="n">ProcessState</span><span class="o">&gt;</span> <span class="n">proc</span><span class="p">(</span><span class="n">ProcessState</span><span class="o">::</span><span class="n">self</span><span class="p">());</span>
+    <span class="c1">//获取BpServiceManager对象</span>
+    <span class="n">sp</span><span class="o">&lt;</span><span class="n">IServiceManager</span><span class="o">&gt;</span> <span class="n">sm</span> <span class="o">=</span> <span class="n">defaultServiceManager</span><span class="p">();</span>
+    <span class="n">AudioFlinger</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="c1">//注册多媒体服务  【见小节3.1】</span>
+    <span class="n">MediaPlayerService</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="n">ResourceManagerService</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="n">CameraService</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="n">AudioPolicyService</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="n">SoundTriggerHwService</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="n">RadioService</span><span class="o">::</span><span class="n">instantiate</span><span class="p">();</span>
+    <span class="n">registerExtensions</span><span class="p">();</span>
+    <span class="c1">//启动Binder线程池</span>
+    <span class="n">ProcessState</span><span class="o">::</span><span class="n">self</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">startThreadPool</span><span class="p">();</span>
+    <span class="c1">//当前线程加入到线程池</span>
+    <span class="n">IPCThreadState</span><span class="o">::</span><span class="n">self</span><span class="p">()</span><span class="o">-&gt;</span><span class="n">joinThreadPool</span><span class="p">();</span>
+ <span class="p">}</span>
+</code></pre></div></div>
+<p>1.打开驱动ProcessState::self()</p>
+
+<p>2.通过defaultServiceManager获取sm对象。</p>
+
+<p>3.开启线程池不断获取客户端发送的数据</p>
+
+
+        </div>
+        <div class="read-all">
+          <a href="/2024/08/06/binder%E7%9A%84c++%E5%AE%9E%E7%8E%B0%E6%B3%A8%E5%86%8C%E6%9C%8D%E5%8A%A1/"><i class="fa fa-newspaper-o"></i>Read All</a>
+        </div>
+        <hr>
+      </li>
+      
+      <li>
+        <h2>
           <a class="post-link" href="/2024/08/01/%E5%9B%BE%E5%BD%A2window%E5%8A%A0%E8%BD%BD%E8%A7%86%E5%9B%BE/">一:图形window加载视图</a>
         </h2>
         <div class="label">
@@ -194,7 +282,7 @@
       
       <li>
         <h2>
-          <a class="post-link" href="/2024/07/23/binder%E6%A1%86%E6%9E%B6framework%E5%88%86%E6%9E%90/">十:binder框架framework分析</a>
+          <a class="post-link" href="/2024/07/23/binder%E6%A1%86%E6%9E%B6framework%E5%88%86%E6%9E%90/">九:binder框架framework分析</a>
         </h2>
         <div class="label">
           <div class="label-card">
@@ -591,9 +679,11 @@ ipc通信机制的一般套路</p>
         </div>
         <ul class="content-ul" recent>
           
+          <li><a href="/2024/08/06/binder%E7%9A%84c++%E5%AE%9E%E7%8E%B0%E6%B3%A8%E5%86%8C%E6%9C%8D%E5%8A%A1/">七:binder的C++实现注册服务</a></li>
+          
           <li><a href="/2024/08/01/%E5%9B%BE%E5%BD%A2window%E5%8A%A0%E8%BD%BD%E8%A7%86%E5%9B%BE/">一:图形window加载视图</a></li>
           
-          <li><a href="/2024/07/23/binder%E6%A1%86%E6%9E%B6framework%E5%88%86%E6%9E%90/">十:binder框架framework分析</a></li>
+          <li><a href="/2024/07/23/binder%E6%A1%86%E6%9E%B6framework%E5%88%86%E6%9E%90/">九:binder框架framework分析</a></li>
           
           <li><a href="/2024/07/08/%E5%8C%BF%E5%90%8Dbinder/">十:匿名binder</a></li>
           
@@ -630,7 +720,7 @@ ipc通信机制的一般套路</p>
               <span class="name">
                 android
               </span>
-              <span class="badge">5</span>
+              <span class="badge">6</span>
             </a>
           </li>
           
@@ -651,7 +741,7 @@ ipc通信机制的一般套路</p>
                   <a href="/tag/#binder"
             style="font-size: 18pt; color: #000;">binder</a>
                   <a href="/tag/#显示"
-            style="font-size: 13.5pt; color: #444;">显示</a>
+            style="font-size: 12pt; color: #666;">显示</a>
             
         </div>
       </div>
