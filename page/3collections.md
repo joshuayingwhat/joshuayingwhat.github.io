@@ -53,5 +53,8 @@ type: page
 * [aospxref](http://aospxref.com/)
 * [cs.android](https://cs.android.com/android)
 
+# ebooks #
+* [ebooks](https://github.com/joshuayingwhat/ebooks)
+
 # other blog # 
 * [酷壳](https://coolshell.cn/)
