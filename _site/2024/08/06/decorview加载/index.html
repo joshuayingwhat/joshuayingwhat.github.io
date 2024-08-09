@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>二:decorview加载</title>
+    <meta name="description" content="当系统调用启动一个activity是就会通过反射启动,然后调用handlelauncheractivity。在handlelauncheracitiviy中执行mInstrumentation.callActivityOnCreate调用activity的oncrreate，并且调用activity.attach...">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2024/08/06/decorview%E5%8A%A0%E8%BD%BD/">
+    <link rel="alternate" type="application/rss+xml" title="joshuayingwhat" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">joshuayingwhat</a>
+        <small>IT Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>二:decorview加载</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2024-08-06
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#android" title="Category: android" rel="category">android</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+                
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#%E6%98%BE%E7%A4%BA" title="Tag: 显示" rel="tag">显示</a-->
+        <a href="/tag/#显示" title="Tag: 显示" rel="tag">显示</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+            
+<p>当系统调用启动一个activity是就会通过反射启动,然后调用handlelauncheractivity。在handlelauncheracitiviy中执行mInstrumentation.callActivityOnCreate调用activity的oncrreate，并且调用activity.attach函数创建窗口视图phonewindow。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="kd">private</span> <span class="nc">Activity</span> <span class="nf">performLaunchActivity</span><span class="o">(</span><span class="nc">ActivityClientRecord</span> <span class="n">r</span><span class="o">,</span> <span class="nc">Intent</span> <span class="n">customIntent</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">ActivityInfo</span> <span class="n">aInfo</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="na">activityInfo</span><span class="o">;</span>
+                <span class="n">activity</span><span class="o">.</span><span class="na">attach</span><span class="o">(</span><span class="n">activityBaseContext</span><span class="o">,</span> <span class="k">this</span><span class="o">,</span> <span class="n">getInstrumentation</span><span class="o">(),</span> <span class="n">r</span><span class="o">.</span><span class="na">token</span><span class="o">,</span>
+                        <span class="n">r</span><span class="o">.</span><span class="na">ident</span><span class="o">,</span> <span class="n">app</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">intent</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">activityInfo</span><span class="o">,</span> <span class="n">title</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">parent</span><span class="o">,</span>
+                        <span class="n">r</span><span class="o">.</span><span class="na">embeddedID</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">lastNonConfigurationInstances</span><span class="o">,</span> <span class="n">config</span><span class="o">,</span>
+                        <span class="n">r</span><span class="o">.</span><span class="na">referrer</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">voiceInteractor</span><span class="o">,</span> <span class="n">window</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">activityConfigCallback</span><span class="o">,</span>
+                        <span class="n">r</span><span class="o">.</span><span class="na">assistToken</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">shareableActivityToken</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">initialCallerInfoAccessToken</span><span class="o">);</span>
+                <span class="n">r</span><span class="o">.</span><span class="na">activity</span> <span class="o">=</span> <span class="n">activity</span><span class="o">;</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">r</span><span class="o">.</span><span class="na">isPersistable</span><span class="o">())</span> <span class="o">{</span>
+                    <span class="n">mInstrumentation</span><span class="o">.</span><span class="na">callActivityOnCreate</span><span class="o">(</span><span class="n">activity</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">state</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">persistentState</span><span class="o">);</span>
+                <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                    <span class="n">mInstrumentation</span><span class="o">.</span><span class="na">callActivityOnCreate</span><span class="o">(</span><span class="n">activity</span><span class="o">,</span> <span class="n">r</span><span class="o">.</span><span class="na">state</span><span class="o">);</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+            <span class="n">r</span><span class="o">.</span><span class="na">setState</span><span class="o">(</span><span class="no">ON_CREATE</span><span class="o">);</span>
+       
+        <span class="k">return</span> <span class="n">activity</span><span class="o">;</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>……</p>
+
+<p>activity中oncreate的setcontentview函数就会被调用这个时候系统就会初始化decorview并且解析xml</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">setContentView</span><span class="o">(</span><span class="nd">@LayoutRes</span> <span class="kt">int</span> <span class="n">layoutResID</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">getWindow</span><span class="o">().</span><span class="na">setContentView</span><span class="o">(</span><span class="n">layoutResID</span><span class="o">);</span>
+        <span class="n">initWindowDecorActionBar</span><span class="o">();</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>其中getwidnow其实就是activiy.attach中创建的phonewindow。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">setContentView</span><span class="o">(</span><span class="kt">int</span> <span class="n">layoutResID</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mContentParent</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">installDecor</span><span class="o">();</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="n">mContentParent</span><span class="o">.</span><span class="na">removeAllViews</span><span class="o">();</span>
+        <span class="o">}</span>
+        <span class="n">mLayoutInflater</span><span class="o">.</span><span class="na">inflate</span><span class="o">(</span><span class="n">layoutResID</span><span class="o">,</span> <span class="n">mContentParent</span><span class="o">);</span>
+        <span class="kd">final</span> <span class="nc">Callback</span> <span class="n">cb</span> <span class="o">=</span> <span class="n">getCallback</span><span class="o">();</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">cb</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">isDestroyed</span><span class="o">())</span> <span class="o">{</span>
+            <span class="n">cb</span><span class="o">.</span><span class="na">onContentChanged</span><span class="o">();</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>mContentParent就是app中的xml布局的父布局，在installdecor中初始化出来。installdecor主要做两件事一个是创建decorview第二个就是找到decorview中的容器mContentparent</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">void</span> <span class="nf">installDecor</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mDecor</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">mDecor</span> <span class="o">=</span> <span class="n">generateDecor</span><span class="o">();</span>
+            <span class="n">mDecor</span><span class="o">.</span><span class="na">setDescendantFocusability</span><span class="o">(</span><span class="nc">ViewGroup</span><span class="o">.</span><span class="na">FOCUS_AFTER_DESCENDANTS</span><span class="o">);</span>
+            <span class="n">mDecor</span><span class="o">.</span><span class="na">setIsRootNamespace</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mContentParent</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">mContentParent</span> <span class="o">=</span> <span class="n">generateLayout</span><span class="o">(</span><span class="n">mDecor</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+<span class="kd">protected</span> <span class="nc">DecorView</span> <span class="nf">generateDecor</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nf">DecorView</span><span class="o">(</span><span class="n">getContext</span><span class="o">(),</span> <span class="o">-</span><span class="mi">1</span><span class="o">);</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>generateDecor就是new Decorview，创建decorview对象。generateLayout将创建出来的mDecorview作为参数.</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">protected</span> <span class="nc">ViewGroup</span> <span class="nf">generateLayout</span><span class="o">(</span><span class="nc">DecorView</span> <span class="n">decor</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">mDecor</span><span class="o">.</span><span class="na">startChanging</span><span class="o">();</span>
+        <span class="nc">View</span> <span class="n">in</span> <span class="o">=</span> <span class="n">mLayoutInflater</span><span class="o">.</span><span class="na">inflate</span><span class="o">(</span><span class="n">layoutResource</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+        <span class="n">decor</span><span class="o">.</span><span class="na">addView</span><span class="o">(</span><span class="n">in</span><span class="o">,</span> <span class="k">new</span> <span class="nc">ViewGroup</span><span class="o">.</span><span class="na">LayoutParams</span><span class="o">(</span><span class="no">MATCH_PARENT</span><span class="o">,</span> <span class="no">MATCH_PARENT</span><span class="o">));</span>
+        <span class="nc">ViewGroup</span> <span class="n">contentParent</span> <span class="o">=</span> <span class="o">(</span><span class="nc">ViewGroup</span><span class="o">)</span><span class="n">findViewById</span><span class="o">(</span><span class="no">ID_ANDROID_CONTENT</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">contentParent</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="s">"Window couldn't find content container view"</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="n">mDecor</span><span class="o">.</span><span class="na">finishChanging</span><span class="o">();</span>
+        <span class="k">return</span> <span class="n">contentParent</span><span class="o">;</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>其中ID_ANDROID_CONTENT就是decorview中的一个布局id。接下来解析布局mLayoutInflater.inflate(layoutResID, mContentParent);</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="kd">public</span> <span class="nc">View</span> <span class="nf">inflate</span><span class="o">(</span><span class="nc">XmlPullParser</span> <span class="n">parser</span><span class="o">,</span> <span class="nd">@Nullable</span> <span class="nc">ViewGroup</span> <span class="n">root</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">attachToRoot</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">synchronized</span> <span class="o">(</span><span class="n">mConstructorArgs</span><span class="o">)</span> <span class="o">{</span>
+            <span class="nc">View</span> <span class="n">result</span> <span class="o">=</span> <span class="n">root</span><span class="o">;</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">root</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">root</span><span class="o">.</span><span class="na">getViewRootImpl</span><span class="o">()</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">root</span><span class="o">.</span><span class="na">getViewRootImpl</span><span class="o">().</span><span class="na">notifyRendererOfExpensiveFrame</span><span class="o">();</span>
+            <span class="o">}</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">root</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">attachToRoot</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="n">root</span><span class="o">.</span><span class="na">addView</span><span class="o">(</span><span class="n">temp</span><span class="o">,</span> <span class="n">params</span><span class="o">);</span>
+                    <span class="o">}</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">root</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="o">!</span><span class="n">attachToRoot</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="n">result</span> <span class="o">=</span> <span class="n">temp</span><span class="o">;</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+            <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>root就是传进来的mCotnentParent。最终将我们的xml布局添加到decorview的布局中。最终decorview已经有布局内容了,接下来执行handleresumactiviy中的makevisible函数</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">void</span> <span class="nf">makeVisible</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(!</span><span class="n">mWindowAdded</span><span class="o">)</span> <span class="o">{</span>
+            <span class="nc">ViewManager</span> <span class="n">wm</span> <span class="o">=</span> <span class="n">getWindowManager</span><span class="o">();</span>
+            <span class="n">wm</span><span class="o">.</span><span class="na">addView</span><span class="o">(</span><span class="n">mDecor</span><span class="o">,</span> <span class="n">getWindow</span><span class="o">().</span><span class="na">getAttributes</span><span class="o">());</span>
+            <span class="n">mWindowAdded</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="n">mDecor</span><span class="o">.</span><span class="na">setVisibility</span><span class="o">(</span><span class="nc">View</span><span class="o">.</span><span class="na">VISIBLE</span><span class="o">);</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>最总调用windowmanager的addview方法。将我们的decorview添加到创建出来的phonewindow中。</p>
+
+<p>参考:[https://www.jianshu.com/p/c2b38bada5ba]</p>
+
+        </article>
+        <hr>
+
+        
+        
+        
+        
+        
+          <h2 id="similar_posts">Similar Posts</h2>
+            <ul>
+                
+                <li class="relatedPost">
+                    <a href="/2024/08/09/view%E7%BB%98%E5%88%B6/">三:view绘制
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+         
+                <li class="relatedPost">
+                    <a href="/2024/08/08/xml%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B8%83%E5%B1%80%E5%8A%A0%E8%BD%BD/">xml自定义布局加载
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+         
+                <li class="relatedPost">
+                    <a href="/2024/08/01/%E5%9B%BE%E5%BD%A2window%E5%8A%A0%E8%BD%BD%E8%A7%86%E5%9B%BE/">一:图形window加载视图
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+         
+                <li class="relatedPost">
+                    <a href="/2024/07/02/%E5%9B%BE%E5%BD%A2%E7%A1%AC%E4%BB%B6/">一:图形硬件(Gralloc,Hardware Composer)
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+                
+            </ul>
+            
+
+            <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2024/08/06/binder%E7%9A%84c++%E5%AE%9E%E7%8E%B0%E6%B3%A8%E5%86%8C%E6%9C%8D%E5%8A%A1/">七:binder的C++实现注册服务</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+        <p><strong>下一篇</strong> <a href="/2024/08/08/xml%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B8%83%E5%B1%80%E5%8A%A0%E8%BD%BD/">xml自定义布局加载</a></p>
+        
+    </div>
+</div>
+
+
+            <!-- <h2 id="comments">Comments</h2>
+        
+
+
+ -->
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+    /**
+     * target _blank
+     */
+    (function () {
+        var aTags = document.querySelectorAll('article a:not([id])')
+        for (var i = 0; i < aTags.length; i++) {
+            aTags[i].setAttribute('target', '_blank')
+        }
+    }());
+</script>
+<script src=" /js/pageContent.js " charset="utf-8"></script>
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+            
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/joshuayingwhat" title="GitHub"><i class="fa fa-github"
+                    aria-hidden="true"></i></a>  
+            <a href="mailto:joshuayingwhat@163.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>       
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github
+                    Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

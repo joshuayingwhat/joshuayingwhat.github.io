@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>三:view绘制</title>
+    <meta name="description" content="  viewrootimpl@performTraversals当decorview创建完成后，解析xml布局。最终就到了requestlayout开始计算布局的宽高位置以及绘制。viewrootimpl@performTraversals   private void performTraversals() {...">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2024/08/09/view%E7%BB%98%E5%88%B6/">
+    <link rel="alternate" type="application/rss+xml" title="joshuayingwhat" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">joshuayingwhat</a>
+        <small>IT Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>三:view绘制</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2024-08-09
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#android" title="Category: android" rel="category">android</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+                
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#%E6%98%BE%E7%A4%BA" title="Tag: 显示" rel="tag">显示</a-->
+        <a href="/tag/#显示" title="Tag: 显示" rel="tag">显示</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+            <ul id="markdown-toc">
+  <li><a href="#viewrootimplperformtraversals" id="markdown-toc-viewrootimplperformtraversals">viewrootimpl@performTraversals</a></li>
+  <li><a href="#viewrootimplperformmeasure" id="markdown-toc-viewrootimplperformmeasure">viewrootimpl@performMeasure</a></li>
+  <li><a href="#viewrootimplperformlayout" id="markdown-toc-viewrootimplperformlayout">viewrootimpl@performLayout</a></li>
+  <li><a href="#viewrootimplperformdraw" id="markdown-toc-viewrootimplperformdraw">viewrootimpl@performDraw</a></li>
+  <li><a href="#viewinvalidate和viewpostinvalidate" id="markdown-toc-viewinvalidate和viewpostinvalidate">View@invalidate()和View@PostInvalidate()</a></li>
+</ul>
+
+<p><img src="https://s2.loli.net/2024/08/09/C1vEDzdmbUuLnci.webp" alt="" />
+当decorview创建完成后，解析xml布局。最终就到了requestlayout开始计算布局的宽高位置以及绘制。</p>
+
+<h1 id="viewrootimplperformtraversals">viewrootimpl@performTraversals</h1>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>   <span class="kd">private</span> <span class="kt">void</span> <span class="nf">performTraversals</span><span class="o">()</span> <span class="o">{</span>
+		   <span class="c1">//获取decorview的宽高规格</span>
+        <span class="nc">WindowManager</span><span class="o">.</span><span class="na">LayoutParams</span> <span class="n">lp</span> <span class="o">=</span> <span class="n">mWindowAttributes</span><span class="o">;</span>
+        <span class="c1">//顶层视图decorview所需要的宽高</span>
+        <span class="kt">int</span> <span class="n">desiredWindowWidth</span><span class="o">;</span>
+        <span class="kt">int</span> <span class="n">desiredWindowHeight</span><span class="o">;</span>
+        <span class="c1">//此时mFirst = true</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mFirst</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">mFullRedrawNeeded</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+            <span class="n">mLayoutRequested</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+            <span class="c1">//如果窗口类型是有状态栏的,则顶层视图的窗口宽度和高度就是除了状态栏</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">shouldUseDisplaySize</span><span class="o">(</span><span class="n">lp</span><span class="o">))</span> <span class="o">{</span>
+                <span class="nc">Point</span> <span class="n">size</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">Point</span><span class="o">();</span>
+                <span class="n">mDisplay</span><span class="o">.</span><span class="na">getRealSize</span><span class="o">(</span><span class="n">size</span><span class="o">);</span>
+                <span class="n">desiredWindowWidth</span> <span class="o">=</span> <span class="n">size</span><span class="o">.</span><span class="na">x</span><span class="o">;</span>
+                <span class="n">desiredWindowHeight</span> <span class="o">=</span> <span class="n">size</span><span class="o">.</span><span class="na">y</span><span class="o">;</span>
+            <span class="o">}</span> <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+		            <span class="c1">//如果没有则decorview的宽高就是整个屏幕的宽高</span>
+                <span class="n">desiredWindowWidth</span> <span class="o">=</span> <span class="n">mWinFrame</span><span class="o">.</span><span class="na">width</span><span class="o">();</span>
+                <span class="n">desiredWindowHeight</span> <span class="o">=</span> <span class="n">mWinFrame</span><span class="o">.</span><span class="na">height</span><span class="o">();</span>
+            <span class="o">}</span>
+              <span class="kt">int</span> <span class="n">childWidthMeasureSpec</span> <span class="o">=</span> <span class="n">getRootMeasureSpec</span><span class="o">(</span><span class="n">mWidth</span><span class="o">,</span> <span class="n">lp</span><span class="o">.</span><span class="na">width</span><span class="o">);</span>
+              <span class="kt">int</span> <span class="n">childHeightMeasureSpec</span> <span class="o">=</span> <span class="n">getRootMeasureSpec</span><span class="o">(</span><span class="n">mHeight</span><span class="o">,</span> <span class="n">lp</span><span class="o">.</span><span class="na">height</span><span class="o">);</span>
+              <span class="o">...</span>
+               <span class="c1">// Ask host how big it wants to be</span>
+               <span class="c1">//执行测量操作</span>
+              <span class="n">performMeasure</span><span class="o">(</span><span class="n">childWidthMeasureSpec</span><span class="o">,</span> <span class="n">childHeightMeasureSpec</span><span class="o">);</span>
+              <span class="o">...</span>
+              <span class="c1">//执行设置位置操作</span>
+              <span class="n">performLayout</span><span class="o">(</span><span class="n">lp</span><span class="o">,</span> <span class="n">mWidth</span><span class="o">,</span> <span class="n">mHeight</span><span class="o">);</span>
+              <span class="o">...</span>
+              <span class="c1">//绘制操作</span>
+              <span class="n">performDraw</span><span class="o">();</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>……</p>
+
+<h1 id="viewrootimplperformmeasure">viewrootimpl@performMeasure</h1>
+<p><img src="https://s2.loli.net/2024/08/09/MafPCkq7mtr4wRW.png" alt="" /></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="cm">/**
+     * &lt;p&gt;
+     * This is called to find out how big a view should be. The parent
+     * supplies constraint information in the width and height parameters.
+     * &lt;/p&gt;
+     *
+     * &lt;p&gt;
+     * The actual measurement work of a view is performed in
+     * {@link #onMeasure(int, int)}, called by this method. Therefore, only
+     * {@link #onMeasure(int, int)} can and must be overridden by subclasses.
+     * &lt;/p&gt;
+     *
+     *
+     * @param widthMeasureSpec Horizontal space requirements as imposed by the
+     *        parent
+     * @param heightMeasureSpec Vertical space requirements as imposed by the
+     *        parent
+     *
+     * @see #onMeasure(int, int)
+     */</span>
+     <span class="c1">//final方法，子类不可重写</span>
+    <span class="kd">public</span> <span class="kd">final</span> <span class="kt">void</span> <span class="nf">measure</span><span class="o">(</span><span class="kt">int</span> <span class="n">widthMeasureSpec</span><span class="o">,</span> <span class="kt">int</span> <span class="n">heightMeasureSpec</span><span class="o">)</span> <span class="o">{</span>
+        <span class="o">......</span>
+        <span class="c1">//回调onMeasure()方法</span>
+        <span class="n">onMeasure</span><span class="o">(</span><span class="n">widthMeasureSpec</span><span class="o">,</span> <span class="n">heightMeasureSpec</span><span class="o">);</span>
+        <span class="o">......</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>view中measure是final的也就是view的子类是不可以重写这个方法,每个view控件的实际宽高都是由父控件和自身决定的。实际子view是在onmeasure中实现自己的测量逻辑，其中widthMeasureSpec和heightMeasureSpec代表着父view的规格。</p>
+
+<p><img src="https://s2.loli.net/2024/08/09/b2ng1dmsciVNfSI.png" alt="" />
+调用setMeasuredDimension对view的宽和高进行设值。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="cm">/**
+     * Utility to return a default size. Uses the supplied size if the
+     * MeasureSpec imposed no constraints. Will get larger if allowed
+     * by the MeasureSpec.
+     *
+     * @param size Default size for this view
+     * @param measureSpec Constraints imposed by the parent
+     * @return The size this view should be.
+     */</span>
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kt">int</span> <span class="nf">getDefaultSize</span><span class="o">(</span><span class="kt">int</span> <span class="n">size</span><span class="o">,</span> <span class="kt">int</span> <span class="n">measureSpec</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">result</span> <span class="o">=</span> <span class="n">size</span><span class="o">;</span>
+        <span class="kt">int</span> <span class="n">specMode</span> <span class="o">=</span> <span class="nc">MeasureSpec</span><span class="o">.</span><span class="na">getMode</span><span class="o">(</span><span class="n">measureSpec</span><span class="o">);</span>
+        <span class="kt">int</span> <span class="n">specSize</span> <span class="o">=</span> <span class="nc">MeasureSpec</span><span class="o">.</span><span class="na">getSize</span><span class="o">(</span><span class="n">measureSpec</span><span class="o">);</span>
+
+        <span class="k">switch</span> <span class="o">(</span><span class="n">specMode</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="nc">MeasureSpec</span><span class="o">.</span><span class="na">UNSPECIFIED</span><span class="o">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">size</span><span class="o">;</span>
+            <span class="k">break</span><span class="o">;</span>
+        <span class="k">case</span> <span class="nc">MeasureSpec</span><span class="o">.</span><span class="na">AT_MOST</span><span class="o">:</span>
+        <span class="k">case</span> <span class="nc">MeasureSpec</span><span class="o">.</span><span class="na">EXACTLY</span><span class="o">:</span>
+            <span class="c1">//默认 精确模式和最大模式下都是使用后边的 specSize ,这会导致我们设置的 wrap_content 无效，始终是充满父容器。</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">specSize</span><span class="o">;</span>
+            <span class="k">break</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>getdefaultsize中的measurespec是父view的规格。因此子view中设置wrap_content或者match_parent都会填充满父布局。因此如果需要设置子view想要的宽高就要重写onmeasure方法中的setmeasureddimension。</p>
+
+<font color="red">measure是怎样递归找到这些view的？viewgroup的measure过程(https://www.sukaidev.top/2018/12/10/bfd836fe/)？</font>
+<p>在viewrootimpl调用setview时传入的第一个参数view=decorview，因此performMeasure中的view就是decorview最终decorview的onmeasure会被调用
+viewgroup是一个抽象类，具体的实现由它的子类实现，例如linearlayout中的onmeasure</p>
+
+<font color="red">linearlayout中为什么没有调用measureChildren(https://blog.csdn.net/liuqinhou/article/details/125899594)?</font>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">protected</span> <span class="kt">void</span> <span class="nf">measureChildren</span><span class="o">(</span><span class="kt">int</span> <span class="n">widthMeasureSpec</span><span class="o">,</span> <span class="kt">int</span> <span class="n">heightMeasureSpec</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">size</span> <span class="o">=</span> <span class="n">mChildrenCount</span><span class="o">;</span>
+        <span class="kd">final</span> <span class="nc">View</span><span class="o">[]</span> <span class="n">children</span> <span class="o">=</span> <span class="n">mChildren</span><span class="o">;</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">size</span><span class="o">;</span> <span class="o">++</span><span class="n">i</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kd">final</span> <span class="nc">View</span> <span class="n">child</span> <span class="o">=</span> <span class="n">children</span><span class="o">[</span><span class="n">i</span><span class="o">];</span>
+            <span class="k">if</span> <span class="o">((</span><span class="n">child</span><span class="o">.</span><span class="na">mViewFlags</span> <span class="o">&amp;</span> <span class="no">VISIBILITY_MASK</span><span class="o">)</span> <span class="o">!=</span> <span class="no">GONE</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">measureChild</span><span class="o">(</span><span class="n">child</span><span class="o">,</span> <span class="n">widthMeasureSpec</span><span class="o">,</span> <span class="n">heightMeasureSpec</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">measureChild</span><span class="o">(</span><span class="nc">View</span> <span class="n">child</span><span class="o">,</span> <span class="kt">int</span> <span class="n">parentWidthMeasureSpec</span><span class="o">,</span>
+            <span class="kt">int</span> <span class="n">parentHeightMeasureSpec</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="nc">LayoutParams</span> <span class="n">lp</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getLayoutParams</span><span class="o">();</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">childWidthMeasureSpec</span> <span class="o">=</span> <span class="n">getChildMeasureSpec</span><span class="o">(</span><span class="n">parentWidthMeasureSpec</span><span class="o">,</span>
+                <span class="n">mPaddingLeft</span> <span class="o">+</span> <span class="n">mPaddingRight</span><span class="o">,</span> <span class="n">lp</span><span class="o">.</span><span class="na">width</span><span class="o">);</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">childHeightMeasureSpec</span> <span class="o">=</span> <span class="n">getChildMeasureSpec</span><span class="o">(</span><span class="n">parentHeightMeasureSpec</span><span class="o">,</span>
+                <span class="n">mPaddingTop</span> <span class="o">+</span> <span class="n">mPaddingBottom</span><span class="o">,</span> <span class="n">lp</span><span class="o">.</span><span class="na">height</span><span class="o">);</span>
+        <span class="n">child</span><span class="o">.</span><span class="na">measure</span><span class="o">(</span><span class="n">childWidthMeasureSpec</span><span class="o">,</span> <span class="n">childHeightMeasureSpec</span><span class="o">);</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>如果直接调用viewgroup的measureChildren对于linearlayout来说每个子view的测量没有计算margin属性导致每个view没有占位viewgroup的剩余大小都是math.max(0,spaceszie-padding).因此linearlayout没有调用measureChildren</p>
+
+<h1 id="viewrootimplperformlayout">viewrootimpl@performLayout</h1>
+<p>执行完测量后就开始需要viewgroup摆放view</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">void</span> <span class="nf">performLayout</span><span class="o">(</span><span class="nc">WindowManager</span><span class="o">.</span><span class="na">LayoutParams</span> <span class="n">lp</span><span class="o">,</span> <span class="kt">int</span> <span class="n">desiredWindowWidth</span><span class="o">,</span>
+            <span class="kt">int</span> <span class="n">desiredWindowHeight</span><span class="o">)</span> <span class="o">{</span>
+						        <span class="o">...</span>
+                    <span class="n">host</span><span class="o">.</span><span class="na">layout</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span> <span class="n">host</span><span class="o">.</span><span class="na">getMeasuredWidth</span><span class="o">(),</span> <span class="n">host</span><span class="o">.</span><span class="na">getMeasuredHeight</span><span class="o">());</span>
+                    <span class="o">...</span>
+						        <span class="n">mInLayout</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>host就是decorview，最终执行到了最终的父类view.layout.</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">layout</span><span class="o">(</span><span class="kt">int</span> <span class="n">l</span><span class="o">,</span> <span class="kt">int</span> <span class="n">t</span><span class="o">,</span> <span class="kt">int</span> <span class="n">r</span><span class="o">,</span> <span class="kt">int</span> <span class="n">b</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">oldL</span> <span class="o">=</span> <span class="n">mLeft</span><span class="o">;</span>
+        <span class="kt">int</span> <span class="n">oldT</span> <span class="o">=</span> <span class="n">mTop</span><span class="o">;</span>
+        <span class="kt">int</span> <span class="n">oldB</span> <span class="o">=</span> <span class="n">mBottom</span><span class="o">;</span>
+        <span class="kt">int</span> <span class="n">oldR</span> <span class="o">=</span> <span class="n">mRight</span><span class="o">;</span>
+
+        <span class="kt">boolean</span> <span class="n">changed</span> <span class="o">=</span> <span class="n">isLayoutModeOptical</span><span class="o">(</span><span class="n">mParent</span><span class="o">)</span> <span class="o">?</span>
+                <span class="n">setOpticalFrame</span><span class="o">(</span><span class="n">l</span><span class="o">,</span> <span class="n">t</span><span class="o">,</span> <span class="n">r</span><span class="o">,</span> <span class="n">b</span><span class="o">)</span> <span class="o">:</span> <span class="n">setFrame</span><span class="o">(</span><span class="n">l</span><span class="o">,</span> <span class="n">t</span><span class="o">,</span> <span class="n">r</span><span class="o">,</span> <span class="n">b</span><span class="o">);</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">changed</span> <span class="o">||</span> <span class="o">(</span><span class="n">mPrivateFlags</span> <span class="o">&amp;</span> <span class="no">PFLAG_LAYOUT_REQUIRED</span><span class="o">)</span> <span class="o">==</span> <span class="no">PFLAG_LAYOUT_REQUIRED</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">onLayout</span><span class="o">(</span><span class="n">changed</span><span class="o">,</span> <span class="n">l</span><span class="o">,</span> <span class="n">t</span><span class="o">,</span> <span class="n">r</span><span class="o">,</span> <span class="n">b</span><span class="o">);</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>首先changed需要等于true，setframe就是用来判断当前视图view上下左右的位置判断布局是否改变:</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>    <span class="kd">protected</span> <span class="kt">boolean</span> <span class="nf">setFrame</span><span class="o">(</span><span class="kt">int</span> <span class="n">left</span><span class="o">,</span> <span class="kt">int</span> <span class="n">top</span><span class="o">,</span> <span class="kt">int</span> <span class="n">right</span><span class="o">,</span> <span class="kt">int</span> <span class="n">bottom</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kt">boolean</span> <span class="n">changed</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="no">DBG</span><span class="o">)</span> <span class="o">{</span>
+            <span class="nc">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="no">VIEW_LOG_TAG</span><span class="o">,</span> <span class="k">this</span> <span class="o">+</span> <span class="s">" View.setFrame("</span> <span class="o">+</span> <span class="n">left</span> <span class="o">+</span> <span class="s">","</span> <span class="o">+</span> <span class="n">top</span> <span class="o">+</span> <span class="s">","</span>
+                    <span class="o">+</span> <span class="n">right</span> <span class="o">+</span> <span class="s">","</span> <span class="o">+</span> <span class="n">bottom</span> <span class="o">+</span> <span class="s">")"</span><span class="o">);</span>
+        <span class="o">}</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">mLeft</span> <span class="o">!=</span> <span class="n">left</span> <span class="o">||</span> <span class="n">mRight</span> <span class="o">!=</span> <span class="n">right</span> <span class="o">||</span> <span class="n">mTop</span> <span class="o">!=</span> <span class="n">top</span> <span class="o">||</span> <span class="n">mBottom</span> <span class="o">!=</span> <span class="n">bottom</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">changed</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+
+            <span class="c1">// Remember our drawn bit</span>
+            <span class="kt">int</span> <span class="n">drawn</span> <span class="o">=</span> <span class="n">mPrivateFlags</span> <span class="o">&amp;</span> <span class="no">PFLAG_DRAWN</span><span class="o">;</span>
+
+            <span class="kt">int</span> <span class="n">oldWidth</span> <span class="o">=</span> <span class="n">mRight</span> <span class="o">-</span> <span class="n">mLeft</span><span class="o">;</span>
+            <span class="kt">int</span> <span class="n">oldHeight</span> <span class="o">=</span> <span class="n">mBottom</span> <span class="o">-</span> <span class="n">mTop</span><span class="o">;</span>
+            <span class="kt">int</span> <span class="n">newWidth</span> <span class="o">=</span> <span class="n">right</span> <span class="o">-</span> <span class="n">left</span><span class="o">;</span>
+            <span class="kt">int</span> <span class="n">newHeight</span> <span class="o">=</span> <span class="n">bottom</span> <span class="o">-</span> <span class="n">top</span><span class="o">;</span>
+            <span class="c1">// Invalidate our old position</span>
+            <span class="n">invalidate</span><span class="o">(</span><span class="n">sizeChanged</span><span class="o">);</span>
+            <span class="n">mLeft</span> <span class="o">=</span> <span class="n">left</span><span class="o">;</span>
+            <span class="n">mTop</span> <span class="o">=</span> <span class="n">top</span><span class="o">;</span>
+            <span class="n">mRight</span> <span class="o">=</span> <span class="n">right</span><span class="o">;</span>
+            <span class="n">mBottom</span> <span class="o">=</span> <span class="n">bottom</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">changed</span><span class="o">;</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>如果和之前的上下左右不相同，则更改上下左右的位置信息返回true，onlayout会被调用。
+此时decorview的onlayout就会被调用</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="nd">@Override</span>
+    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onLayout</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">changed</span><span class="o">,</span> <span class="kt">int</span> <span class="n">left</span><span class="o">,</span> <span class="kt">int</span> <span class="n">top</span><span class="o">,</span> <span class="kt">int</span> <span class="n">right</span><span class="o">,</span> <span class="kt">int</span> <span class="n">bottom</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">.</span><span class="na">onLayout</span><span class="o">(</span><span class="n">changed</span><span class="o">,</span> <span class="n">left</span><span class="o">,</span> <span class="n">top</span><span class="o">,</span> <span class="n">right</span><span class="o">,</span> <span class="n">bottom</span><span class="o">);</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>调用decorview的父类framelayout@onlayout</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="nd">@Override</span>
+    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">onLayout</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">changed</span><span class="o">,</span> <span class="kt">int</span> <span class="n">left</span><span class="o">,</span> <span class="kt">int</span> <span class="n">top</span><span class="o">,</span> <span class="kt">int</span> <span class="n">right</span><span class="o">,</span> <span class="kt">int</span> <span class="n">bottom</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">layoutChildren</span><span class="o">(</span><span class="n">left</span><span class="o">,</span> <span class="n">top</span><span class="o">,</span> <span class="n">right</span><span class="o">,</span> <span class="n">bottom</span><span class="o">,</span> <span class="kc">false</span> <span class="cm">/* no force left gravity */</span><span class="o">);</span>
+    <span class="o">}</span>
+    
+    <span class="kt">void</span> <span class="nf">layoutChildren</span><span class="o">(</span><span class="kt">int</span> <span class="n">left</span><span class="o">,</span> <span class="kt">int</span> <span class="n">top</span><span class="o">,</span> <span class="kt">int</span> <span class="n">right</span><span class="o">,</span> <span class="kt">int</span> <span class="n">bottom</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">forceLeftGravity</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">count</span> <span class="o">=</span> <span class="n">getChildCount</span><span class="o">();</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">parentLeft</span> <span class="o">=</span> <span class="n">getPaddingLeftWithForeground</span><span class="o">();</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">parentRight</span> <span class="o">=</span> <span class="n">right</span> <span class="o">-</span> <span class="n">left</span> <span class="o">-</span> <span class="n">getPaddingRightWithForeground</span><span class="o">();</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">parentTop</span> <span class="o">=</span> <span class="n">getPaddingTopWithForeground</span><span class="o">();</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">parentBottom</span> <span class="o">=</span> <span class="n">bottom</span> <span class="o">-</span> <span class="n">top</span> <span class="o">-</span> <span class="n">getPaddingBottomWithForeground</span><span class="o">();</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">count</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+            <span class="kd">final</span> <span class="nc">View</span> <span class="n">child</span> <span class="o">=</span> <span class="n">getChildAt</span><span class="o">(</span><span class="n">i</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">child</span><span class="o">.</span><span class="na">getVisibility</span><span class="o">()</span> <span class="o">!=</span> <span class="no">GONE</span><span class="o">)</span> <span class="o">{</span>
+                <span class="kd">final</span> <span class="nc">LayoutParams</span> <span class="n">lp</span> <span class="o">=</span> <span class="o">(</span><span class="nc">LayoutParams</span><span class="o">)</span> <span class="n">child</span><span class="o">.</span><span class="na">getLayoutParams</span><span class="o">();</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">width</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getMeasuredWidth</span><span class="o">();</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">height</span> <span class="o">=</span> <span class="n">child</span><span class="o">.</span><span class="na">getMeasuredHeight</span><span class="o">();</span>
+                <span class="kt">int</span> <span class="n">childLeft</span><span class="o">;</span>
+                <span class="kt">int</span> <span class="n">childTop</span><span class="o">;</span>
+                <span class="kt">int</span> <span class="n">gravity</span> <span class="o">=</span> <span class="n">lp</span><span class="o">.</span><span class="na">gravity</span><span class="o">;</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">gravity</span> <span class="o">==</span> <span class="o">-</span><span class="mi">1</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">gravity</span> <span class="o">=</span> <span class="no">DEFAULT_CHILD_GRAVITY</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">layoutDirection</span> <span class="o">=</span> <span class="n">getLayoutDirection</span><span class="o">();</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">absoluteGravity</span> <span class="o">=</span> <span class="nc">Gravity</span><span class="o">.</span><span class="na">getAbsoluteGravity</span><span class="o">(</span><span class="n">gravity</span><span class="o">,</span> <span class="n">layoutDirection</span><span class="o">);</span>
+                <span class="kd">final</span> <span class="kt">int</span> <span class="n">verticalGravity</span> <span class="o">=</span> <span class="n">gravity</span> <span class="o">&amp;</span> <span class="nc">Gravity</span><span class="o">.</span><span class="na">VERTICAL_GRAVITY_MASK</span><span class="o">;</span>
+                <span class="k">switch</span> <span class="o">(</span><span class="n">absoluteGravity</span> <span class="o">&amp;</span> <span class="nc">Gravity</span><span class="o">.</span><span class="na">HORIZONTAL_GRAVITY_MASK</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="k">case</span> <span class="nc">Gravity</span><span class="o">.</span><span class="na">CENTER_HORIZONTAL</span><span class="o">:</span>
+                        <span class="n">childLeft</span> <span class="o">=</span> <span class="n">parentLeft</span> <span class="o">+</span> <span class="o">(</span><span class="n">parentRight</span> <span class="o">-</span> <span class="n">parentLeft</span> <span class="o">-</span> <span class="n">width</span><span class="o">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span>
+                        <span class="n">lp</span><span class="o">.</span><span class="na">leftMargin</span> <span class="o">-</span> <span class="n">lp</span><span class="o">.</span><span class="na">rightMargin</span><span class="o">;</span>
+                        <span class="k">break</span><span class="o">;</span>
+                    <span class="k">case</span> <span class="nc">Gravity</span><span class="o">.</span><span class="na">RIGHT</span><span class="o">:</span>
+                        <span class="k">if</span> <span class="o">(!</span><span class="n">forceLeftGravity</span><span class="o">)</span> <span class="o">{</span>
+                            <span class="n">childLeft</span> <span class="o">=</span> <span class="n">parentRight</span> <span class="o">-</span> <span class="n">width</span> <span class="o">-</span> <span class="n">lp</span><span class="o">.</span><span class="na">rightMargin</span><span class="o">;</span>
+                            <span class="k">break</span><span class="o">;</span>
+                        <span class="o">}</span>
+                    <span class="k">case</span> <span class="nc">Gravity</span><span class="o">.</span><span class="na">LEFT</span><span class="o">:</span>
+                    <span class="k">default</span><span class="o">:</span>
+                        <span class="n">childLeft</span> <span class="o">=</span> <span class="n">parentLeft</span> <span class="o">+</span> <span class="n">lp</span><span class="o">.</span><span class="na">leftMargin</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="k">switch</span> <span class="o">(</span><span class="n">verticalGravity</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="k">case</span> <span class="nc">Gravity</span><span class="o">.</span><span class="na">TOP</span><span class="o">:</span>
+                        <span class="n">childTop</span> <span class="o">=</span> <span class="n">parentTop</span> <span class="o">+</span> <span class="n">lp</span><span class="o">.</span><span class="na">topMargin</span><span class="o">;</span>
+                        <span class="k">break</span><span class="o">;</span>
+                    <span class="k">case</span> <span class="nc">Gravity</span><span class="o">.</span><span class="na">CENTER_VERTICAL</span><span class="o">:</span>
+                        <span class="n">childTop</span> <span class="o">=</span> <span class="n">parentTop</span> <span class="o">+</span> <span class="o">(</span><span class="n">parentBottom</span> <span class="o">-</span> <span class="n">parentTop</span> <span class="o">-</span> <span class="n">height</span><span class="o">)</span> <span class="o">/</span> <span class="mi">2</span> <span class="o">+</span>
+                        <span class="n">lp</span><span class="o">.</span><span class="na">topMargin</span> <span class="o">-</span> <span class="n">lp</span><span class="o">.</span><span class="na">bottomMargin</span><span class="o">;</span>
+                        <span class="k">break</span><span class="o">;</span>
+                    <span class="k">case</span> <span class="nc">Gravity</span><span class="o">.</span><span class="na">BOTTOM</span><span class="o">:</span>
+                        <span class="n">childTop</span> <span class="o">=</span> <span class="n">parentBottom</span> <span class="o">-</span> <span class="n">height</span> <span class="o">-</span> <span class="n">lp</span><span class="o">.</span><span class="na">bottomMargin</span><span class="o">;</span>
+                        <span class="k">break</span><span class="o">;</span>
+                    <span class="k">default</span><span class="o">:</span>
+                        <span class="n">childTop</span> <span class="o">=</span> <span class="n">parentTop</span> <span class="o">+</span> <span class="n">lp</span><span class="o">.</span><span class="na">topMargin</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="n">child</span><span class="o">.</span><span class="na">layout</span><span class="o">(</span><span class="n">childLeft</span><span class="o">,</span> <span class="n">childTop</span><span class="o">,</span> <span class="n">childLeft</span> <span class="o">+</span> <span class="n">width</span><span class="o">,</span> <span class="n">childTop</span> <span class="o">+</span> <span class="n">height</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>不断的设置子view的位置。layout只会被viewgroup调用，view中layout是一个空实现没有意义。在遍历view的时候如果当前view设置了GONE则不会计算它在viewgroup的空间。view的getwidth和getheight只能在layout执行完成后调用才有数值</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+     * Return the width of your view.
+     *
+     * @return The width of your view, in pixels.
+     */</span>
+    <span class="nd">@ViewDebug</span><span class="o">.</span><span class="na">ExportedProperty</span><span class="o">(</span><span class="n">category</span> <span class="o">=</span> <span class="s">"layout"</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kd">final</span> <span class="kt">int</span> <span class="nf">getWidth</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">mRight</span> <span class="o">-</span> <span class="n">mLeft</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="cm">/**
+     * Return the height of your view.
+     *
+     * @return The height of your view, in pixels.
+     */</span>
+    <span class="nd">@ViewDebug</span><span class="o">.</span><span class="na">ExportedProperty</span><span class="o">(</span><span class="n">category</span> <span class="o">=</span> <span class="s">"layout"</span><span class="o">)</span>
+    <span class="kd">public</span> <span class="kd">final</span> <span class="kt">int</span> <span class="nf">getHeight</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">mBottom</span> <span class="o">-</span> <span class="n">mTop</span><span class="o">;</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>mRight和mLeft,吗BOttom,mTop都是在setFrame中被赋值。</p>
+
+<h1 id="viewrootimplperformdraw">viewrootimpl@performDraw</h1>
+<p>执行draw方法</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">draw</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">fullRedrawNeeded</span><span class="o">)</span> <span class="o">{</span>
+        <span class="nc">Surface</span> <span class="n">surface</span> <span class="o">=</span> <span class="n">mSurface</span><span class="o">;</span>
+                <span class="k">if</span> <span class="o">(!</span><span class="n">drawSoftware</span><span class="o">(</span><span class="n">surface</span><span class="o">,</span> <span class="n">mAttachInfo</span><span class="o">,</span> <span class="n">xOffset</span><span class="o">,</span> <span class="n">yOffset</span><span class="o">,</span>
+                        <span class="n">scalingRequired</span><span class="o">,</span> <span class="n">dirty</span><span class="o">,</span> <span class="n">surfaceInsets</span><span class="o">))</span> <span class="o">{</span>
+                    <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+                <span class="o">}</span>
+        <span class="k">return</span> <span class="n">useAsyncReport</span><span class="o">;</span>
+    <span class="o">}</span>
+    
+    <span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">drawSoftware</span><span class="o">(</span><span class="nc">Surface</span> <span class="n">surface</span><span class="o">,</span> <span class="nc">AttachInfo</span> <span class="n">attachInfo</span><span class="o">,</span> <span class="kt">int</span> <span class="n">xoff</span><span class="o">,</span> <span class="kt">int</span> <span class="n">yoff</span><span class="o">,</span>
+            <span class="kt">boolean</span> <span class="n">scalingRequired</span><span class="o">,</span> <span class="nc">Rect</span> <span class="n">dirty</span><span class="o">,</span> <span class="nc">Rect</span> <span class="n">surfaceInsets</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">try</span> <span class="o">{</span>
+                <span class="n">mView</span><span class="o">.</span><span class="na">draw</span><span class="o">(</span><span class="n">canvas</span><span class="o">);</span>
+            <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+            <span class="k">try</span> <span class="o">{</span>
+                <span class="n">surface</span><span class="o">.</span><span class="na">unlockCanvasAndPost</span><span class="o">(</span><span class="n">canvas</span><span class="o">);</span>
+            <span class="o">}</span> 
+        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>mView调用自己的draw方法 其中mview=decorview.</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code> <span class="nd">@Override</span>
+      <span class="kd">public</span> <span class="kt">void</span> <span class="nf">draw</span><span class="o">(</span><span class="nc">Canvas</span> <span class="n">canvas</span><span class="o">)</span> <span class="o">{</span>
+          <span class="kd">super</span><span class="o">.</span><span class="na">draw</span><span class="o">(</span><span class="n">canvas</span><span class="o">);</span>
+          <span class="k">if</span> <span class="o">(</span><span class="n">mMenuBackground</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+             <span class="n">mMenuBackground</span><span class="o">.</span><span class="na">draw</span><span class="o">(</span><span class="n">canvas</span><span class="o">);</span>
+          <span class="o">}</span>
+      <span class="o">}</span>
+</code></pre></div></div>
+<p>super.draw调用的是framelayout中的draw方法，由于framelayout没有实现因此只能找它的父类view。</p>
+
+<p>view@draw:</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+     * Manually render this view (and all of its children) to the given Canvas.
+     * The view must have already done a full layout before this function is
+     * called.  When implementing a view, implement
+     * {@link #onDraw(android.graphics.Canvas)} instead of overriding this method.
+     * If you do need to override this method, call the superclass version.
+     *
+     * @param canvas The Canvas to which the View is rendered.
+     */</span>
+    <span class="nd">@CallSuper</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">draw</span><span class="o">(</span><span class="nc">Canvas</span> <span class="n">canvas</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">privateFlags</span> <span class="o">=</span> <span class="n">mPrivateFlags</span><span class="o">;</span>
+        <span class="kd">final</span> <span class="kt">boolean</span> <span class="n">dirtyOpaque</span> <span class="o">=</span> <span class="o">(</span><span class="n">privateFlags</span> <span class="o">&amp;</span> <span class="no">PFLAG_DIRTY_MASK</span><span class="o">)</span> <span class="o">==</span> <span class="no">PFLAG_DIRTY_OPAQUE</span> <span class="o">&amp;&amp;</span>
+                <span class="o">(</span><span class="n">mAttachInfo</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="o">!</span><span class="n">mAttachInfo</span><span class="o">.</span><span class="na">mIgnoreDirtyState</span><span class="o">);</span>
+        <span class="n">mPrivateFlags</span> <span class="o">=</span> <span class="o">(</span><span class="n">privateFlags</span> <span class="o">&amp;</span> <span class="o">~</span><span class="no">PFLAG_DIRTY_MASK</span><span class="o">)</span> <span class="o">|</span> <span class="no">PFLAG_DRAWN</span><span class="o">;</span>
+
+        <span class="cm">/*
+         * Draw traversal performs several drawing steps which must be executed
+         * in the appropriate order:
+         *
+         *      1. Draw the background
+         *      2. If necessary, save the canvas' layers to prepare for fading
+         *      3. Draw view's content
+         *      4. Draw children
+         *      5. If necessary, draw the fading edges and restore layers
+         *      6. Draw decorations (scrollbars for instance)
+         */</span>
+
+        <span class="c1">// Step 1, draw the background, if needed</span>
+        <span class="kt">int</span> <span class="n">saveCount</span><span class="o">;</span>
+
+        <span class="k">if</span> <span class="o">(!</span><span class="n">dirtyOpaque</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">drawBackground</span><span class="o">(</span><span class="n">canvas</span><span class="o">);</span>
+        <span class="o">}</span>
+
+        <span class="c1">// skip step 2 &amp; 5 if possible (common case)</span>
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">viewFlags</span> <span class="o">=</span> <span class="n">mViewFlags</span><span class="o">;</span>
+        <span class="kt">boolean</span> <span class="n">horizontalEdges</span> <span class="o">=</span> <span class="o">(</span><span class="n">viewFlags</span> <span class="o">&amp;</span> <span class="no">FADING_EDGE_HORIZONTAL</span><span class="o">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="kt">boolean</span> <span class="n">verticalEdges</span> <span class="o">=</span> <span class="o">(</span><span class="n">viewFlags</span> <span class="o">&amp;</span> <span class="no">FADING_EDGE_VERTICAL</span><span class="o">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(!</span><span class="n">verticalEdges</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">horizontalEdges</span><span class="o">)</span> <span class="o">{</span>
+            <span class="c1">// Step 3, draw the content</span>
+            <span class="k">if</span> <span class="o">(!</span><span class="n">dirtyOpaque</span><span class="o">)</span> <span class="n">onDraw</span><span class="o">(</span><span class="n">canvas</span><span class="o">);</span>
+
+            <span class="c1">// Step 4, draw the children</span>
+            <span class="n">dispatchDraw</span><span class="o">(</span><span class="n">canvas</span><span class="o">);</span>
+
+            <span class="n">drawAutofilledHighlight</span><span class="o">(</span><span class="n">canvas</span><span class="o">);</span>
+
+            <span class="c1">// Overlay is part of the content and draws beneath Foreground</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">mOverlay</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">mOverlay</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">())</span> <span class="o">{</span>
+                <span class="n">mOverlay</span><span class="o">.</span><span class="na">getOverlayView</span><span class="o">().</span><span class="na">dispatchDraw</span><span class="o">(</span><span class="n">canvas</span><span class="o">);</span>
+            <span class="o">}</span>
+
+            <span class="c1">// Step 6, draw decorations (foreground, scrollbars)</span>
+            <span class="n">onDrawForeground</span><span class="o">(</span><span class="n">canvas</span><span class="o">);</span>
+
+            <span class="c1">// Step 7, draw the default focus highlight</span>
+            <span class="n">drawDefaultFocusHighlight</span><span class="o">(</span><span class="n">canvas</span><span class="o">);</span>
+
+            <span class="k">if</span> <span class="o">(</span><span class="n">debugDraw</span><span class="o">())</span> <span class="o">{</span>
+                <span class="n">debugDrawFocus</span><span class="o">(</span><span class="n">canvas</span><span class="o">);</span>
+            <span class="o">}</span>
+
+            <span class="c1">// we're done...</span>
+            <span class="k">return</span><span class="o">;</span>
+        <span class="o">}</span>
+</code></pre></div></div>
+<p>1.首先绘制view的背景drawBackground。</p>
+
+<p>2.其次调用onDraw绘制自身.</p>
+
+<p>3.绘制children(view@dispatchDraw)：在view中dispatchDraw是一个空方法因此它的实现一定是在viewgroup中。viewGroup@dispathDraw:</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Override</span>
+    <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">dispatchDraw</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="nc">Canvas</span> <span class="n">canvas</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">childrenCount</span><span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+            <span class="k">while</span> <span class="o">(</span><span class="n">transientIndex</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">mTransientIndices</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">transientIndex</span><span class="o">)</span> <span class="o">==</span> <span class="n">i</span><span class="o">)</span> <span class="o">{</span>
+                <span class="kd">final</span> <span class="nc">View</span> <span class="n">transientChild</span> <span class="o">=</span> <span class="n">mTransientViews</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">transientIndex</span><span class="o">);</span>
+                <span class="k">if</span> <span class="o">((</span><span class="n">transientChild</span><span class="o">.</span><span class="na">mViewFlags</span> <span class="o">&amp;</span> <span class="no">VISIBILITY_MASK</span><span class="o">)</span> <span class="o">==</span> <span class="no">VISIBLE</span> <span class="o">||</span>
+                        <span class="n">transientChild</span><span class="o">.</span><span class="na">getAnimation</span><span class="o">()</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">more</span> <span class="o">|=</span> <span class="n">drawChild</span><span class="o">(</span><span class="n">canvas</span><span class="o">,</span> <span class="n">transientChild</span><span class="o">,</span> <span class="n">drawingTime</span><span class="o">);</span>
+                <span class="o">}</span>
+                <span class="n">transientIndex</span><span class="o">++;</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">transientIndex</span> <span class="o">&gt;=</span> <span class="n">transientCount</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="n">transientIndex</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+            <span class="kd">final</span> <span class="kt">int</span> <span class="n">childIndex</span> <span class="o">=</span> <span class="n">getAndVerifyPreorderedIndex</span><span class="o">(</span><span class="n">childrenCount</span><span class="o">,</span> <span class="n">i</span><span class="o">,</span> <span class="n">customOrder</span><span class="o">);</span>
+            <span class="kd">final</span> <span class="nc">View</span> <span class="n">child</span> <span class="o">=</span> <span class="n">getAndVerifyPreorderedView</span><span class="o">(</span><span class="n">preorderedList</span><span class="o">,</span> <span class="n">children</span><span class="o">,</span> <span class="n">childIndex</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">((</span><span class="n">child</span><span class="o">.</span><span class="na">mViewFlags</span> <span class="o">&amp;</span> <span class="no">VISIBILITY_MASK</span><span class="o">)</span> <span class="o">==</span> <span class="no">VISIBLE</span> <span class="o">||</span> <span class="n">child</span><span class="o">.</span><span class="na">getAnimation</span><span class="o">()</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">more</span> <span class="o">|=</span> <span class="n">drawChild</span><span class="o">(</span><span class="n">canvas</span><span class="o">,</span> <span class="n">child</span><span class="o">,</span> <span class="n">drawingTime</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+    
+    <span class="kd">protected</span> <span class="kt">boolean</span> <span class="nf">drawChild</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="nc">Canvas</span> <span class="n">canvas</span><span class="o">,</span> <span class="nc">View</span> <span class="n">child</span><span class="o">,</span> <span class="kt">long</span> <span class="n">drawingTime</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">child</span><span class="o">.</span><span class="na">draw</span><span class="o">(</span><span class="n">canvas</span><span class="o">,</span> <span class="k">this</span><span class="o">,</span> <span class="n">drawingTime</span><span class="o">);</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>遍历出childview然后调用它的draw方法.</p>
+
+<h1 id="viewinvalidate和viewpostinvalidate">View@invalidate()和View@PostInvalidate()</h1>
+<p>设置都是重新绘制view。不同的是invalidate是在主线程中更新重绘，而postinvalidate是可以在子线程调用重绘。</p>
+
+<p>参考: <a href="https://www.jianshu.com/p/58d22426e79e">https://www.jianshu.com/p/58d22426e79e</a></p>
+
+<p><a href="https://blog.csdn.net/yanbober/article/details/46128379">https://blog.csdn.net/yanbober/article/details/46128379</a></p>
+
+        </article>
+        <hr>
+
+        
+        
+        
+        
+        
+          <h2 id="similar_posts">Similar Posts</h2>
+            <ul>
+                
+                <li class="relatedPost">
+                    <a href="/2024/08/08/xml%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B8%83%E5%B1%80%E5%8A%A0%E8%BD%BD/">xml自定义布局加载
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+         
+                <li class="relatedPost">
+                    <a href="/2024/08/06/decorview%E5%8A%A0%E8%BD%BD/">二:decorview加载
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+         
+                <li class="relatedPost">
+                    <a href="/2024/08/01/%E5%9B%BE%E5%BD%A2window%E5%8A%A0%E8%BD%BD%E8%A7%86%E5%9B%BE/">一:图形window加载视图
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+         
+                <li class="relatedPost">
+                    <a href="/2024/07/02/%E5%9B%BE%E5%BD%A2%E7%A1%AC%E4%BB%B6/">一:图形硬件(Gralloc,Hardware Composer)
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+                
+            </ul>
+            
+
+            <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2024/08/08/xml%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B8%83%E5%B1%80%E5%8A%A0%E8%BD%BD/">xml自定义布局加载</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+    </div>
+</div>
+
+
+            <!-- <h2 id="comments">Comments</h2>
+        
+
+
+ -->
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+    /**
+     * target _blank
+     */
+    (function () {
+        var aTags = document.querySelectorAll('article a:not([id])')
+        for (var i = 0; i < aTags.length; i++) {
+            aTags[i].setAttribute('target', '_blank')
+        }
+    }());
+</script>
+<script src=" /js/pageContent.js " charset="utf-8"></script>
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+            
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/joshuayingwhat" title="GitHub"><i class="fa fa-github"
+                    aria-hidden="true"></i></a>  
+            <a href="mailto:joshuayingwhat@163.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>       
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github
+                    Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>

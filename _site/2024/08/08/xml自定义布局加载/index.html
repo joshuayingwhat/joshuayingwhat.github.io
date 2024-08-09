@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>xml自定义布局加载</title>
+    <meta name="description" content="  Activity@setContentView:Activity@setContentView:这个getWindow就是phonewindow，它是在activity的attach方法中被初始化的。最终调用phonewindow中的setcontentView方法。mLayoutInflater.infla...">
+
+    <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="icon" href="/favicon.ico?" type="image/x-icon">
+    <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
+    <link rel="stylesheet" href="/css/main.css ">
+    <link rel="canonical" href="http://localhost:4000/2024/08/08/xml%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B8%83%E5%B1%80%E5%8A%A0%E8%BD%BD/">
+    <link rel="alternate" type="application/rss+xml" title="joshuayingwhat" href="http://localhost:4000/feed.xml ">
+
+
+
+
+
+</head>
+
+
+  <body>
+
+    <header id="top">
+    <div class="wrapper">
+        <a href="/" class="brand">joshuayingwhat</a>
+        <small>IT Engineer</small>
+        <button id="headerMenu" class="menu"><i class="fa fa-bars"></i></button>
+        <nav id="headerNav">
+            <ul>
+                <li>
+                    
+                    <a href="/">
+                    
+                        <i class="fa fa-home"></i>Home
+                    </a>
+                </li>
+
+                
+                    
+                    <li>
+                        
+                        <a href="/archive/">
+                        
+                            <i class="fa fa-archive"></i>Archives
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/category/">
+                        
+                            <i class="fa fa-th-list"></i>Categories
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/tag/">
+                        
+                            <i class="fa fa-tags"></i>Tags
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/collection/">
+                        
+                            <i class="fa fa-bookmark"></i>Collections
+                        </a>
+                    </li>
+                    
+                
+                    
+                    <li>
+                        
+                        <a href="/about/">
+                        
+                            <i class="fa fa-heart"></i>About
+                        </a>
+                    </li>
+                    
+                
+                    
+                
+                    
+                
+                    
+                
+            </ul>
+        </nav>
+    </div>
+</header>
+
+
+        <div class="page clearfix" post>
+    <div class="left">
+        <h1>xml自定义布局加载</h1>
+        <div class="label">
+
+            <div class="label-card">
+                <i class="fa fa-calendar"></i>2024-08-08
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+            </div>
+
+            <div class="label-card">
+                
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#android" title="Category: android" rel="category">android</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+            </div>
+
+            <div class="label-card">
+                
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <!--a href="/tag/#%E6%98%BE%E7%A4%BA" title="Tag: 显示" rel="tag">显示</a-->
+        <a href="/tag/#显示" title="Tag: 显示" rel="tag">显示</a>
+    
+  
+
+</span>
+
+            </div>
+
+        </div>
+        <hr>
+        <article itemscope itemtype="http://schema.org/BlogPosting">
+            <ul id="markdown-toc">
+  <li><a href="#activitysetcontentview" id="markdown-toc-activitysetcontentview">Activity@setContentView:</a></li>
+  <li><a href="#layoutinflaterinflate" id="markdown-toc-layoutinflaterinflate">LayoutInflater@inflate:</a></li>
+  <li><a href="#factory和factory2" id="markdown-toc-factory和factory2">Factory和Factory2</a></li>
+  <li><a href="#更快的方式加载布局" id="markdown-toc-更快的方式加载布局">更快的方式加载布局?</a></li>
+  <li><a href="#merge-include-viewstub" id="markdown-toc-merge-include-viewstub">Merge Include ViewStub</a></li>
+</ul>
+
+<h1 id="activitysetcontentview">Activity@setContentView:</h1>
+<p><img src="https://s2.loli.net/2024/08/09/EWqm5jQA9TkB4Ny.png" alt="" />
+这个getWindow就是phonewindow，它是在activity的attach方法中被初始化的。</p>
+
+<p>最终调用phonewindow中的setcontentView方法。
+<img src="https://s2.loli.net/2024/08/09/ID9QGo8iVCaTmvE.png" alt="" />
+mLayoutInflater.inflate(layoutResID,mContentParent)对布局资源进行加载</p>
+
+<p>……</p>
+
+<h1 id="layoutinflaterinflate">LayoutInflater@inflate:</h1>
+<p><img src="https://s2.loli.net/2024/08/09/a5xfpSYlKrZEB6i.png" alt="" />
+通过res.getLayout得到XmlResourceParser解析器最终调用inflate三个参数的方法。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+     * Inflate a new view hierarchy from the specified XML node. Throws
+     * {@link InflateException} if there is an error.
+     * &lt;p&gt;
+     * &lt;em&gt;&lt;strong&gt;Important&lt;/strong&gt;&lt;/em&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;For performance
+     * reasons, view inflation relies heavily on pre-processing of XML files
+     * that is done at build time. Therefore, it is not currently possible to
+     * use LayoutInflater with an XmlPullParser over a plain XML file at runtime.
+     *
+     * @param parser XML dom node containing the description of the view
+     *        hierarchy.
+     * @param root Optional view to be the parent of the generated hierarchy (if
+     *        &lt;em&gt;attachToRoot&lt;/em&gt; is true), or else simply an object that
+     *        provides a set of LayoutParams values for root of the returned
+     *        hierarchy (if &lt;em&gt;attachToRoot&lt;/em&gt; is false.)
+     * @param attachToRoot Whether the inflated hierarchy should be attached to
+     *        the root parameter? If false, root is only used to create the
+     *        correct subclass of LayoutParams for the root view in the XML.
+     * @return The root View of the inflated hierarchy. If root was supplied and
+     *         attachToRoot is true, this is root; otherwise it is the root of
+     *         the inflated XML file.
+     */</span>
+<span class="kd">public</span> <span class="nc">View</span> <span class="nf">inflate</span><span class="o">(</span><span class="nc">XmlPullParser</span> <span class="n">parser</span><span class="o">,</span> <span class="nd">@Nullable</span> <span class="nc">ViewGroup</span> <span class="n">root</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">attachToRoot</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">synchronized</span> <span class="o">(</span><span class="n">mConstructorArgs</span><span class="o">)</span> <span class="o">{</span>
+            <span class="nc">Trace</span><span class="o">.</span><span class="na">traceBegin</span><span class="o">(</span><span class="nc">Trace</span><span class="o">.</span><span class="na">TRACE_TAG_VIEW</span><span class="o">,</span> <span class="s">"inflate"</span><span class="o">);</span>
+
+            <span class="kd">final</span> <span class="nc">Context</span> <span class="n">inflaterContext</span> <span class="o">=</span> <span class="n">mContext</span><span class="o">;</span>
+            <span class="kd">final</span> <span class="nc">AttributeSet</span> <span class="n">attrs</span> <span class="o">=</span> <span class="nc">Xml</span><span class="o">.</span><span class="na">asAttributeSet</span><span class="o">(</span><span class="n">parser</span><span class="o">);</span>
+            <span class="nc">Context</span> <span class="n">lastContext</span> <span class="o">=</span> <span class="o">(</span><span class="nc">Context</span><span class="o">)</span> <span class="n">mConstructorArgs</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+            <span class="n">mConstructorArgs</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="n">inflaterContext</span><span class="o">;</span>
+            <span class="nc">View</span> <span class="n">result</span> <span class="o">=</span> <span class="n">root</span><span class="o">;</span>
+
+            <span class="k">try</span> <span class="o">{</span>
+                <span class="n">advanceToRootNode</span><span class="o">(</span><span class="n">parser</span><span class="o">);</span>
+                <span class="kd">final</span> <span class="nc">String</span> <span class="n">name</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="na">getName</span><span class="o">();</span>
+                <span class="k">if</span> <span class="o">(</span><span class="no">TAG_MERGE</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">name</span><span class="o">))</span> <span class="o">{</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">root</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="o">!</span><span class="n">attachToRoot</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="k">throw</span> <span class="k">new</span> <span class="nf">InflateException</span><span class="o">(</span><span class="s">"&lt;merge /&gt; can be used only with a valid "</span>
+                                <span class="o">+</span> <span class="s">"ViewGroup root and attachToRoot=true"</span><span class="o">);</span>
+                    <span class="o">}</span>
+
+                    <span class="n">rInflate</span><span class="o">(</span><span class="n">parser</span><span class="o">,</span> <span class="n">root</span><span class="o">,</span> <span class="n">inflaterContext</span><span class="o">,</span> <span class="n">attrs</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+                <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                    <span class="c1">// Temp is the root view that was found in the xml</span>
+                    <span class="kd">final</span> <span class="nc">View</span> <span class="n">temp</span> <span class="o">=</span> <span class="n">createViewFromTag</span><span class="o">(</span><span class="n">root</span><span class="o">,</span> <span class="n">name</span><span class="o">,</span> <span class="n">inflaterContext</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+
+                    <span class="nc">ViewGroup</span><span class="o">.</span><span class="na">LayoutParams</span> <span class="n">params</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+
+                    <span class="k">if</span> <span class="o">(</span><span class="n">root</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="c1">// Create layout params that match root, if supplied</span>
+                        <span class="n">params</span> <span class="o">=</span> <span class="n">root</span><span class="o">.</span><span class="na">generateLayoutParams</span><span class="o">(</span><span class="n">attrs</span><span class="o">);</span>
+                        <span class="k">if</span> <span class="o">(!</span><span class="n">attachToRoot</span><span class="o">)</span> <span class="o">{</span>
+                            <span class="c1">// Set the layout params for temp if we are not</span>
+                            <span class="c1">// attaching. (If we are, we use addView, below)</span>
+                            <span class="n">temp</span><span class="o">.</span><span class="na">setLayoutParams</span><span class="o">(</span><span class="n">params</span><span class="o">);</span>
+                        <span class="o">}</span>
+                    <span class="o">}</span>
+                    <span class="c1">// Inflate all children under temp against its context.</span>
+                    <span class="n">rInflateChildren</span><span class="o">(</span><span class="n">parser</span><span class="o">,</span> <span class="n">temp</span><span class="o">,</span> <span class="n">attrs</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+
+                    <span class="k">if</span> <span class="o">(</span><span class="no">DEBUG</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="nc">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"-----&gt; done inflating children"</span><span class="o">);</span>
+                    <span class="o">}</span>
+
+                    <span class="c1">// We are supposed to attach all the views we found (int temp)</span>
+                    <span class="c1">// to root. Do that now.</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">root</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">attachToRoot</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="n">root</span><span class="o">.</span><span class="na">addView</span><span class="o">(</span><span class="n">temp</span><span class="o">,</span> <span class="n">params</span><span class="o">);</span>
+                    <span class="o">}</span>
+
+                    <span class="c1">// Decide whether to return the root that was passed in or the</span>
+                    <span class="c1">// top view found in xml.</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">root</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="o">!</span><span class="n">attachToRoot</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="n">result</span> <span class="o">=</span> <span class="n">temp</span><span class="o">;</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+            <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>调用createViewFromTag获取对应view。</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+     * Creates a view from a tag name using the supplied attribute set.
+     * &lt;p&gt;
+     * &lt;strong&gt;Note:&lt;/strong&gt; Default visibility so the BridgeInflater can
+     * override it.
+     *
+     * @param parent the parent view, used to inflate layout params
+     * @param name the name of the XML tag used to define the view
+     * @param context the inflation context for the view, typically the
+     *                {@code parent} or base layout inflater context
+     * @param attrs the attribute set for the XML tag used to define the view
+     * @param ignoreThemeAttr {@code true} to ignore the {@code android:theme}
+     *                        attribute (if set) for the view being inflated,
+     *                        {@code false} otherwise
+     */</span>
+    <span class="nd">@UnsupportedAppUsage</span><span class="o">(</span><span class="n">maxTargetSdk</span> <span class="o">=</span> <span class="nc">Build</span><span class="o">.</span><span class="na">VERSION_CODES</span><span class="o">.</span><span class="na">R</span><span class="o">,</span> <span class="n">trackingBug</span> <span class="o">=</span> <span class="mi">170729553</span><span class="o">)</span>
+    <span class="nc">View</span> <span class="nf">createViewFromTag</span><span class="o">(</span><span class="nc">View</span> <span class="n">parent</span><span class="o">,</span> <span class="nc">String</span> <span class="n">name</span><span class="o">,</span> <span class="nc">Context</span> <span class="n">context</span><span class="o">,</span> <span class="nc">AttributeSet</span> <span class="n">attrs</span><span class="o">,</span>
+            <span class="kt">boolean</span> <span class="n">ignoreThemeAttr</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">name</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="s">"view"</span><span class="o">))</span> <span class="o">{</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">.</span><span class="na">getAttributeValue</span><span class="o">(</span><span class="kc">null</span><span class="o">,</span> <span class="s">"class"</span><span class="o">);</span>
+        <span class="o">}</span>
+
+        <span class="c1">// Apply a theme wrapper, if allowed and one is specified.</span>
+        <span class="k">if</span> <span class="o">(!</span><span class="n">ignoreThemeAttr</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kd">final</span> <span class="nc">TypedArray</span> <span class="n">ta</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="na">obtainStyledAttributes</span><span class="o">(</span><span class="n">attrs</span><span class="o">,</span> <span class="no">ATTRS_THEME</span><span class="o">);</span>
+            <span class="kd">final</span> <span class="kt">int</span> <span class="n">themeResId</span> <span class="o">=</span> <span class="n">ta</span><span class="o">.</span><span class="na">getResourceId</span><span class="o">(</span><span class="mi">0</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">themeResId</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">context</span> <span class="o">=</span> <span class="k">new</span> <span class="nc">ContextThemeWrapper</span><span class="o">(</span><span class="n">context</span><span class="o">,</span> <span class="n">themeResId</span><span class="o">);</span>
+            <span class="o">}</span>
+            <span class="n">ta</span><span class="o">.</span><span class="na">recycle</span><span class="o">();</span>
+        <span class="o">}</span>
+
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="nc">View</span> <span class="n">view</span> <span class="o">=</span> <span class="n">tryCreateView</span><span class="o">(</span><span class="n">parent</span><span class="o">,</span> <span class="n">name</span><span class="o">,</span> <span class="n">context</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+
+            <span class="k">if</span> <span class="o">(</span><span class="n">view</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="kd">final</span> <span class="nc">Object</span> <span class="n">lastContext</span> <span class="o">=</span> <span class="n">mConstructorArgs</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+                <span class="n">mConstructorArgs</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="n">context</span><span class="o">;</span>
+                <span class="k">try</span> <span class="o">{</span>
+                    <span class="k">if</span> <span class="o">(-</span><span class="mi">1</span> <span class="o">==</span> <span class="n">name</span><span class="o">.</span><span class="na">indexOf</span><span class="o">(</span><span class="sc">'.'</span><span class="o">))</span> <span class="o">{</span>
+                        <span class="n">view</span> <span class="o">=</span> <span class="n">onCreateView</span><span class="o">(</span><span class="n">context</span><span class="o">,</span> <span class="n">parent</span><span class="o">,</span> <span class="n">name</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+                    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                        <span class="n">view</span> <span class="o">=</span> <span class="n">createView</span><span class="o">(</span><span class="n">context</span><span class="o">,</span> <span class="n">name</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+                    <span class="o">}</span>
+                <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+                    <span class="n">mConstructorArgs</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="n">lastContext</span><span class="o">;</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+
+            <span class="k">return</span> <span class="n">view</span><span class="o">;</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>通过trycreateview或者反射获取view</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+     * Tries to create a view from a tag name using the supplied attribute set.
+     *
+     * This method gives the factory provided by {@link LayoutInflater#setFactory} and
+     * {@link LayoutInflater#setFactory2} a chance to create a view. However, it does not apply all
+     * of the general view creation logic, and thus may return {@code null} for some tags. This
+     * method is used by {@link LayoutInflater#inflate} in creating {@code View} objects.
+     *
+     * @hide for use by precompiled layouts.
+     *
+     * @param parent the parent view, used to inflate layout params
+     * @param name the name of the XML tag used to define the view
+     * @param context the inflation context for the view, typically the
+     *                {@code parent} or base layout inflater context
+     * @param attrs the attribute set for the XML tag used to define the view
+     */</span>
+    <span class="nd">@UnsupportedAppUsage</span><span class="o">(</span><span class="n">trackingBug</span> <span class="o">=</span> <span class="mi">122360734</span><span class="o">)</span>
+    <span class="nd">@Nullable</span>
+    <span class="kd">public</span> <span class="kd">final</span> <span class="nc">View</span> <span class="nf">tryCreateView</span><span class="o">(</span><span class="nd">@Nullable</span> <span class="nc">View</span> <span class="n">parent</span><span class="o">,</span> <span class="nd">@NonNull</span> <span class="nc">String</span> <span class="n">name</span><span class="o">,</span>
+        <span class="nd">@NonNull</span> <span class="nc">Context</span> <span class="n">context</span><span class="o">,</span>
+        <span class="nd">@NonNull</span> <span class="nc">AttributeSet</span> <span class="n">attrs</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">name</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="no">TAG_1995</span><span class="o">))</span> <span class="o">{</span>
+            <span class="c1">// Let's party like it's 1995!</span>
+            <span class="k">return</span> <span class="k">new</span> <span class="nf">BlinkLayout</span><span class="o">(</span><span class="n">context</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+        <span class="o">}</span>
+
+        <span class="nc">View</span> <span class="n">view</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mFactory2</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">view</span> <span class="o">=</span> <span class="n">mFactory2</span><span class="o">.</span><span class="na">onCreateView</span><span class="o">(</span><span class="n">parent</span><span class="o">,</span> <span class="n">name</span><span class="o">,</span> <span class="n">context</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">mFactory</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">view</span> <span class="o">=</span> <span class="n">mFactory</span><span class="o">.</span><span class="na">onCreateView</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">context</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="n">view</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">view</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">mPrivateFactory</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">view</span> <span class="o">=</span> <span class="n">mPrivateFactory</span><span class="o">.</span><span class="na">onCreateView</span><span class="o">(</span><span class="n">parent</span><span class="o">,</span> <span class="n">name</span><span class="o">,</span> <span class="n">context</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+        <span class="o">}</span>
+
+        <span class="k">return</span> <span class="n">view</span><span class="o">;</span>
+    <span class="o">}</span>
+
+<span class="kd">public</span> <span class="kd">final</span> <span class="nc">View</span> <span class="nf">createView</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="nc">Context</span> <span class="n">viewContext</span><span class="o">,</span> <span class="nd">@NonNull</span> <span class="nc">String</span> <span class="n">name</span><span class="o">,</span>
+            <span class="nd">@Nullable</span> <span class="nc">String</span> <span class="n">prefix</span><span class="o">,</span> <span class="nd">@Nullable</span> <span class="nc">AttributeSet</span> <span class="n">attrs</span><span class="o">)</span>
+            <span class="kd">throws</span> <span class="nc">ClassNotFoundException</span><span class="o">,</span> <span class="nc">InflateException</span> <span class="o">{</span>
+        <span class="nc">Objects</span><span class="o">.</span><span class="na">requireNonNull</span><span class="o">(</span><span class="n">viewContext</span><span class="o">);</span>
+        <span class="nc">Objects</span><span class="o">.</span><span class="na">requireNonNull</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+        <span class="nc">Constructor</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="nc">View</span><span class="o">&gt;</span> <span class="n">constructor</span> <span class="o">=</span> <span class="n">sConstructorMap</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">constructor</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">verifyClassLoader</span><span class="o">(</span><span class="n">constructor</span><span class="o">))</span> <span class="o">{</span>
+            <span class="n">constructor</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+            <span class="n">sConstructorMap</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="nc">Class</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="nc">View</span><span class="o">&gt;</span> <span class="n">clazz</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="nc">Trace</span><span class="o">.</span><span class="na">traceBegin</span><span class="o">(</span><span class="nc">Trace</span><span class="o">.</span><span class="na">TRACE_TAG_VIEW</span><span class="o">,</span> <span class="n">name</span><span class="o">);</span>
+
+            <span class="k">if</span> <span class="o">(</span><span class="n">constructor</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="c1">// Class not found in the cache, see if it's real, and try to add it</span>
+                <span class="n">clazz</span> <span class="o">=</span> <span class="nc">Class</span><span class="o">.</span><span class="na">forName</span><span class="o">(</span><span class="n">prefix</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">?</span> <span class="o">(</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">name</span><span class="o">)</span> <span class="o">:</span> <span class="n">name</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span>
+                        <span class="n">mContext</span><span class="o">.</span><span class="na">getClassLoader</span><span class="o">()).</span><span class="na">asSubclass</span><span class="o">(</span><span class="nc">View</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+                <span class="k">if</span> <span class="o">(</span><span class="n">mFilter</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">clazz</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="kt">boolean</span> <span class="n">allowed</span> <span class="o">=</span> <span class="n">mFilter</span><span class="o">.</span><span class="na">onLoadClass</span><span class="o">(</span><span class="n">clazz</span><span class="o">);</span>
+                    <span class="k">if</span> <span class="o">(!</span><span class="n">allowed</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="n">failNotAllowed</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">prefix</span><span class="o">,</span> <span class="n">viewContext</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+                <span class="n">constructor</span> <span class="o">=</span> <span class="n">clazz</span><span class="o">.</span><span class="na">getConstructor</span><span class="o">(</span><span class="n">mConstructorSignature</span><span class="o">);</span>
+                <span class="n">constructor</span><span class="o">.</span><span class="na">setAccessible</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+                <span class="n">sConstructorMap</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">constructor</span><span class="o">);</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                <span class="c1">// If we have a filter, apply it to cached constructor</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">mFilter</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="c1">// Have we seen this name before?</span>
+                    <span class="nc">Boolean</span> <span class="n">allowedState</span> <span class="o">=</span> <span class="n">mFilterMap</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">name</span><span class="o">);</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">allowedState</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                        <span class="c1">// New class -- remember whether it is allowed</span>
+                        <span class="n">clazz</span> <span class="o">=</span> <span class="nc">Class</span><span class="o">.</span><span class="na">forName</span><span class="o">(</span><span class="n">prefix</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">?</span> <span class="o">(</span><span class="n">prefix</span> <span class="o">+</span> <span class="n">name</span><span class="o">)</span> <span class="o">:</span> <span class="n">name</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span>
+                                <span class="n">mContext</span><span class="o">.</span><span class="na">getClassLoader</span><span class="o">()).</span><span class="na">asSubclass</span><span class="o">(</span><span class="nc">View</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+
+                        <span class="kt">boolean</span> <span class="n">allowed</span> <span class="o">=</span> <span class="n">clazz</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">mFilter</span><span class="o">.</span><span class="na">onLoadClass</span><span class="o">(</span><span class="n">clazz</span><span class="o">);</span>
+                        <span class="n">mFilterMap</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">allowed</span><span class="o">);</span>
+                        <span class="k">if</span> <span class="o">(!</span><span class="n">allowed</span><span class="o">)</span> <span class="o">{</span>
+                            <span class="n">failNotAllowed</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">prefix</span><span class="o">,</span> <span class="n">viewContext</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+                        <span class="o">}</span>
+                    <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="n">allowedState</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="nc">Boolean</span><span class="o">.</span><span class="na">FALSE</span><span class="o">))</span> <span class="o">{</span>
+                        <span class="n">failNotAllowed</span><span class="o">(</span><span class="n">name</span><span class="o">,</span> <span class="n">prefix</span><span class="o">,</span> <span class="n">viewContext</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+                    <span class="o">}</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+
+            <span class="nc">Object</span> <span class="n">lastContext</span> <span class="o">=</span> <span class="n">mConstructorArgs</span><span class="o">[</span><span class="mi">0</span><span class="o">];</span>
+            <span class="n">mConstructorArgs</span><span class="o">[</span><span class="mi">0</span><span class="o">]</span> <span class="o">=</span> <span class="n">viewContext</span><span class="o">;</span>
+            <span class="nc">Object</span><span class="o">[]</span> <span class="n">args</span> <span class="o">=</span> <span class="n">mConstructorArgs</span><span class="o">;</span>
+            <span class="n">args</span><span class="o">[</span><span class="mi">1</span><span class="o">]</span> <span class="o">=</span> <span class="n">attrs</span><span class="o">;</span>
+
+            <span class="k">try</span> <span class="o">{</span>
+                <span class="kd">final</span> <span class="nc">View</span> <span class="n">view</span> <span class="o">=</span> <span class="n">constructor</span><span class="o">.</span><span class="na">newInstance</span><span class="o">(</span><span class="n">args</span><span class="o">);</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">view</span> <span class="k">instanceof</span> <span class="nc">ViewStub</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="c1">// Use the same context when inflating ViewStub later.</span>
+                    <span class="kd">final</span> <span class="nc">ViewStub</span> <span class="n">viewStub</span> <span class="o">=</span> <span class="o">(</span><span class="nc">ViewStub</span><span class="o">)</span> <span class="n">view</span><span class="o">;</span>
+                    <span class="n">viewStub</span><span class="o">.</span><span class="na">setLayoutInflater</span><span class="o">(</span><span class="n">cloneInContext</span><span class="o">((</span><span class="nc">Context</span><span class="o">)</span> <span class="n">args</span><span class="o">[</span><span class="mi">0</span><span class="o">]));</span>
+                <span class="o">}</span>
+                <span class="k">return</span> <span class="n">view</span><span class="o">;</span>
+            <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p>解析完外层布局之后继续解析子布局:rInflateChildren</p>
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+    <span class="kd">final</span> <span class="kt">void</span> <span class="nf">rInflateChildren</span><span class="o">(</span><span class="nc">XmlPullParser</span> <span class="n">parser</span><span class="o">,</span> <span class="nc">View</span> <span class="n">parent</span><span class="o">,</span> <span class="nc">AttributeSet</span> <span class="n">attrs</span><span class="o">,</span>
+            <span class="kt">boolean</span> <span class="n">finishInflate</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">XmlPullParserException</span><span class="o">,</span> <span class="nc">IOException</span> <span class="o">{</span>
+        <span class="n">rInflate</span><span class="o">(</span><span class="n">parser</span><span class="o">,</span> <span class="n">parent</span><span class="o">,</span> <span class="n">parent</span><span class="o">.</span><span class="na">getContext</span><span class="o">(),</span> <span class="n">attrs</span><span class="o">,</span> <span class="n">finishInflate</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="cm">/**
+     * Recursive method used to descend down the xml hierarchy and instantiate
+     * views, instantiate their children, and then call onFinishInflate().
+     * &lt;p&gt;
+     * &lt;strong&gt;Note:&lt;/strong&gt; Default visibility so the BridgeInflater can
+     * override it.
+     */</span>
+    <span class="kt">void</span> <span class="nf">rInflate</span><span class="o">(</span><span class="nc">XmlPullParser</span> <span class="n">parser</span><span class="o">,</span> <span class="nc">View</span> <span class="n">parent</span><span class="o">,</span> <span class="nc">Context</span> <span class="n">context</span><span class="o">,</span>
+            <span class="nc">AttributeSet</span> <span class="n">attrs</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">finishInflate</span><span class="o">)</span> <span class="kd">throws</span> <span class="nc">XmlPullParserException</span><span class="o">,</span> <span class="nc">IOException</span> <span class="o">{</span>
+
+        <span class="kd">final</span> <span class="kt">int</span> <span class="n">depth</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="na">getDepth</span><span class="o">();</span>
+        <span class="kt">int</span> <span class="n">type</span><span class="o">;</span>
+        <span class="kt">boolean</span> <span class="n">pendingRequestFocus</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+
+        <span class="k">while</span> <span class="o">(((</span><span class="n">type</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="na">next</span><span class="o">())</span> <span class="o">!=</span> <span class="nc">XmlPullParser</span><span class="o">.</span><span class="na">END_TAG</span> <span class="o">||</span>
+                <span class="n">parser</span><span class="o">.</span><span class="na">getDepth</span><span class="o">()</span> <span class="o">&gt;</span> <span class="n">depth</span><span class="o">)</span> <span class="o">&amp;&amp;</span> <span class="n">type</span> <span class="o">!=</span> <span class="nc">XmlPullParser</span><span class="o">.</span><span class="na">END_DOCUMENT</span><span class="o">)</span> <span class="o">{</span>
+
+            <span class="k">if</span> <span class="o">(</span><span class="n">type</span> <span class="o">!=</span> <span class="nc">XmlPullParser</span><span class="o">.</span><span class="na">START_TAG</span><span class="o">)</span> <span class="o">{</span>
+                <span class="k">continue</span><span class="o">;</span>
+            <span class="o">}</span>
+
+            <span class="kd">final</span> <span class="nc">String</span> <span class="n">name</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="na">getName</span><span class="o">();</span>
+
+            <span class="k">if</span> <span class="o">(</span><span class="no">TAG_REQUEST_FOCUS</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">name</span><span class="o">))</span> <span class="o">{</span>
+                <span class="n">pendingRequestFocus</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+                <span class="n">consumeChildElements</span><span class="o">(</span><span class="n">parser</span><span class="o">);</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="no">TAG_TAG</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">name</span><span class="o">))</span> <span class="o">{</span>
+                <span class="n">parseViewTag</span><span class="o">(</span><span class="n">parser</span><span class="o">,</span> <span class="n">parent</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="no">TAG_INCLUDE</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">name</span><span class="o">))</span> <span class="o">{</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">parser</span><span class="o">.</span><span class="na">getDepth</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="k">throw</span> <span class="k">new</span> <span class="nf">InflateException</span><span class="o">(</span><span class="s">"&lt;include /&gt; cannot be the root element"</span><span class="o">);</span>
+                <span class="o">}</span>
+                <span class="n">parseInclude</span><span class="o">(</span><span class="n">parser</span><span class="o">,</span> <span class="n">context</span><span class="o">,</span> <span class="n">parent</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="k">if</span> <span class="o">(</span><span class="no">TAG_MERGE</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">name</span><span class="o">))</span> <span class="o">{</span>
+                <span class="k">throw</span> <span class="k">new</span> <span class="nf">InflateException</span><span class="o">(</span><span class="s">"&lt;merge /&gt; must be the root element"</span><span class="o">);</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                <span class="kd">final</span> <span class="nc">View</span> <span class="n">view</span> <span class="o">=</span> <span class="n">createViewFromTag</span><span class="o">(</span><span class="n">parent</span><span class="o">,</span> <span class="n">name</span><span class="o">,</span> <span class="n">context</span><span class="o">,</span> <span class="n">attrs</span><span class="o">);</span>
+                <span class="kd">final</span> <span class="nc">ViewGroup</span> <span class="n">viewGroup</span> <span class="o">=</span> <span class="o">(</span><span class="nc">ViewGroup</span><span class="o">)</span> <span class="n">parent</span><span class="o">;</span>
+                <span class="kd">final</span> <span class="nc">ViewGroup</span><span class="o">.</span><span class="na">LayoutParams</span> <span class="n">params</span> <span class="o">=</span> <span class="n">viewGroup</span><span class="o">.</span><span class="na">generateLayoutParams</span><span class="o">(</span><span class="n">attrs</span><span class="o">);</span>
+                <span class="n">rInflateChildren</span><span class="o">(</span><span class="n">parser</span><span class="o">,</span> <span class="n">view</span><span class="o">,</span> <span class="n">attrs</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+                <span class="n">viewGroup</span><span class="o">.</span><span class="na">addView</span><span class="o">(</span><span class="n">view</span><span class="o">,</span> <span class="n">params</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">pendingRequestFocus</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">parent</span><span class="o">.</span><span class="na">restoreDefaultFocus</span><span class="o">();</span>
+        <span class="o">}</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">finishInflate</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">parent</span><span class="o">.</span><span class="na">onFinishInflate</span><span class="o">();</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+<p><strong><font color="red">LayoutInflate.inflate中attachToRoot传true或者false的意义?什么时候第二个参数需要传ViewGroup?为什么Fragment中传false也可以添加视图？</font></strong>
+attachToRoot表示当前视图是否添加到当前的viewgroup中：</p>
+
+<p>1.attachtoroot = false:表示当前view视图不添加到viewgroup中，并且layoutinflate.inflate返回的view就是当前xml的布局rootview。
+<img src="https://s2.loli.net/2024/08/09/Lwb63aUFctsJdZE.png" alt="" />
+2.attachtoroot = true：表示视图添加到viewgroup中但是viewroot返回的是当前viewgroup的根视图
+<img src="https://s2.loli.net/2024/08/09/uPwfGNrjeLih3lT.png" alt="" />
+<strong>如果viewgroup直接设置为null，那么attachtotouch设置为false或者ture返回的都是当前试图的view</strong></p>
+
+<ol>
+  <li>在Fragment的onCreateView()中加载布局,并返回根View。</li>
+  <li>FragmentManager会接收到这个返回的View。</li>
+  <li>在FragmentManager的execPendingActions()方法中,会获取到每个Fragment返回的View。</li>
+  <li>对每个Fragment,会调用其onViewCreated()方法,通知其View已经创建。</li>
+  <li>然后会调用addToContainer()方法,将Fragment的View添加到Activity的容器中。</li>
+  <li>FragmentManager会根据Fragment的tag、id等信息,决定添加到Activity布局的哪个位置。</li>
+  <li>这样就完成了Fragment布局的添加并展示出来。</li>
+  <li>之后当Fragment detach或remove时,其View也会被移除。</li>
+</ol>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// FragmentManager</span>
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">execPendingActions</span><span class="o">()</span> <span class="o">{</span>
+
+  <span class="c1">// 遍历所有Fragment</span>
+  <span class="k">for</span> <span class="o">(</span><span class="nc">Fragment</span> <span class="n">f</span> <span class="o">:</span> <span class="n">mAdded</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// 获取Fragment的View</span>
+    <span class="nc">View</span> <span class="n">view</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="na">onCreateView</span><span class="o">();</span> 
+    <span class="k">if</span> <span class="o">(</span><span class="n">view</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+      <span class="c1">// 通知Fragment,它的View已经创建完成</span>
+      <span class="n">f</span><span class="o">.</span><span class="na">onViewCreated</span><span class="o">();</span>
+
+      <span class="c1">// 添加Fragment的View到容器中</span>
+      <span class="n">addToContainer</span><span class="o">(</span><span class="n">f</span><span class="o">,</span> <span class="n">containerId</span><span class="o">,</span> <span class="n">view</span><span class="o">);</span> 
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+<h1 id="factory和factory2">Factory和Factory2</h1>
+<p><a href="https://juejin.cn/post/6872737859829235726">https://juejin.cn/post/6872737859829235726</a></p>
+
+<p>factory是为了兼容低版本布局组件的。factory其实就是一个AppCompatDelegateImpl的初始化是在activitythread的oncreateattach.activity中</p>
+
+<p>factory会做大量的兼容性操作这也是布局加载过慢的主要原因。factory可以用作更改布局或者更换布局皮肤。</p>
+
+<h1 id="更快的方式加载布局">更快的方式加载布局?</h1>
+<p><a href="https://github.com/duduhuang88/qxml">https://github.com/duduhuang88/qxml</a></p>
+
+<p><a href="https://github.com/iReaderAndroid/X2C">https://github.com/iReaderAndroid/X2C</a></p>
+
+<h1 id="merge-include-viewstub">Merge Include ViewStub</h1>
+<p>merge标签为什么要作为xml资源布局的根节点?</p>
+
+
+        </article>
+        <hr>
+
+        
+        
+        
+        
+        
+          <h2 id="similar_posts">Similar Posts</h2>
+            <ul>
+                
+                <li class="relatedPost">
+                    <a href="/2024/08/09/view%E7%BB%98%E5%88%B6/">三:view绘制
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+         
+                <li class="relatedPost">
+                    <a href="/2024/08/06/decorview%E5%8A%A0%E8%BD%BD/">二:decorview加载
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+         
+                <li class="relatedPost">
+                    <a href="/2024/08/01/%E5%9B%BE%E5%BD%A2window%E5%8A%A0%E8%BD%BD%E8%A7%86%E5%9B%BE/">一:图形window加载视图
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+         
+                <li class="relatedPost">
+                    <a href="/2024/07/02/%E5%9B%BE%E5%BD%A2%E7%A1%AC%E4%BB%B6/">一:图形硬件(Gralloc,Hardware Composer)
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+                
+            </ul>
+            
+
+            <div class="post-recent">
+    <div class="pre">
+        
+        <p><strong>上一篇</strong> <a href="/2024/08/06/decorview%E5%8A%A0%E8%BD%BD/">二:decorview加载</a></p>
+        
+    </div>
+    <div class="nex">
+
+        
+        <p><strong>下一篇</strong> <a href="/2024/08/09/view%E7%BB%98%E5%88%B6/">三:view绘制</a></p>
+        
+    </div>
+</div>
+
+
+            <!-- <h2 id="comments">Comments</h2>
+        
+
+
+ -->
+
+
+    </div>
+    <button class="anchor"><i class="fa fa-anchor"></i></button>
+    <div class="right">
+        <div class="wrap">
+
+            <!-- Content -->
+            <div class="side content">
+                <div>
+                    Content
+                </div>
+                <ul id="content-side" class="content-ul">
+                    
+                    <li><a href="#similar_posts">Similar Posts</a></li>
+                    
+                </ul>
+            </div>
+            <!-- 其他div框放到这里 -->
+            <!-- <div class="side">bbbb</div> -->
+        </div>
+    </div>
+</div>
+<script>
+    /**
+     * target _blank
+     */
+    (function () {
+        var aTags = document.querySelectorAll('article a:not([id])')
+        for (var i = 0; i < aTags.length; i++) {
+            aTags[i].setAttribute('target', '_blank')
+        }
+    }());
+</script>
+<script src=" /js/pageContent.js " charset="utf-8"></script>
+
+    <footer class="site-footer">
+
+
+    <div class="wrapper">
+
+        <p class="description">
+            
+        </p>
+        <p class="contact">
+            Contact me at: 
+            <a href="https://github.com/joshuayingwhat" title="GitHub"><i class="fa fa-github"
+                    aria-hidden="true"></i></a>  
+            <a href="mailto:joshuayingwhat@163.com" title="email"><i class="fa fa-envelope-o" aria-hidden="true"></i></a>       
+        </p>
+        <p class="power">
+            <span>
+                Site powered by <a href="https://jekyllrb.com/">Jekyll</a> & <a href="https://pages.github.com/">Github
+                    Pages</a>.
+            </span>
+            <span>
+                Theme designed by <a href="https://github.com/Gaohaoyang">HyG</a>.
+            </span>
+        </p>
+    </div>
+</footer>
+<script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+    <div class="back-to-top">
+    <a href="#top" data-scroll>
+        <i class="fa fa-arrow-up" aria-hidden="true"></i>
+    </a>
+</div>
+
+    <script src=" /js/main.js " charset="utf-8"></script>
+    <script src=" /js/smooth-scroll.min.js " charset="utf-8"></script>
+    <script type="text/javascript">
+      smoothScroll.init({
+        speed: 500, // Integer. How fast to complete the scroll in milliseconds
+        easing: 'easeInOutCubic', // Easing pattern to use
+        offset: 20, // Integer. How far to offset the scrolling anchor location in pixels
+      });
+    </script>
+    <!-- <script src=" /js/scroll.min.js " charset="utf-8"></script> -->
+  </body>
+
+</html>
