@@ -24,6 +24,7 @@ type: page
 
 ### Kotlin
 * [Kotlin 标准参考教程](https://www.kotlincn.net/)
+* [Kotlin 极简教程](https://www.bookstack.cn/read/EasyKotlin/README.md)
 
 ### C/C++
 * [c菜鸟教程](https://www.runoob.com/cprogramming/c-tutorial.html)
