@@ -84,11 +84,8 @@ ComposerService::ComposerService()
 通过Surfaceflinger@getCblk获得一块匿名共享内存mServerCblkMemory，描述系统屏幕的宽高，个数，方向，密度等信息.
 
 这个时候sm就是surfaceflinger的服务代理。SurfaceComposerClient有值后就会执行onFristRef函数.
-
 ![](https://s2.loli.net/2024/08/15/jbyuokKalAYFrXx.png)
-
 这样app端通过SurfaceComposerClient与surfaceflinger建立了连接。
-
 ![](https://s2.loli.net/2024/08/15/zgq9PIHufZYwsSU.png)
 <li>1. 应用创建SurfaceComposerClient对象，准备向SurfaceFlinger系统服务发起动作，由于SurfaceComposerClient继承自RefBase，因此会触发SurfaceComposerClient::onFirstRef函数。</li>
 <li>2. 在onFirstRef函数中，SurfaceComposerClient通过IServiceManager::getService方法拿到了SurfaceFlinger系统的代理端BpSurfaceComposer。接口马上通过BpSurfaceComposer向SurfaceFlinger发起connect请求（Bp向Bn发起请求动作）。</li>
