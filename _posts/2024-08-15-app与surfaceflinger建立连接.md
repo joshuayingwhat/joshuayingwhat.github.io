@@ -93,7 +93,9 @@ ComposerService::ComposerService()
 1. 应用创建SurfaceComposerClient对象，准备向SurfaceFlinger系统服务发起动作，由于SurfaceComposerClient继承自RefBase，因此会触发SurfaceComposerClient::onFirstRef函数。
 
 2. 在onFirstRef函数中，SurfaceComposerClient通过IServiceManager::getService方法拿到了SurfaceFlinger系统的代理端BpSurfaceComposer。接口马上通过BpSurfaceComposer向SurfaceFlinger发起connect请求（Bp向Bn发起请求动作）。</br>
+
         a. SurfaceFlinger接收到请求后，在本地创建一个本地代理对象Client（这是ClientBnSurfaceComposerClient端的），然后将该对象以ISrufaceComposerClient的形式返回给BpSurfaceComposer；</br>
+        
         b. BpSurfaceComposer接收到SurfaceFlinger返回过来的Client对象后，通过ISurfaceComposerClient::asInterface函数将Client对象转换成BpSurfaceComposerClient对象。
 
 3. SurfaceComposerClient::onFirstRef函数执行完后，APP就与SurfaceFlinger服务成功建立连接了，后面就可以通过这个SurfaceFlinger的Client Proxy与SurfaceFlinger进行正常的通信。
