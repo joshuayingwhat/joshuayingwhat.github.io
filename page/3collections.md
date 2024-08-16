@@ -34,6 +34,9 @@ type: page
 * [cppreference](https://zh.cppreference.com/w/%E9%A6%96%E9%A1%B5)
 * [wscschool](https://www.w3cschool.cn/cpp/)
 
+### rust
+* [rust圣经](https://course.rs/about-book.html)
+
 # 操作系统
 * [jyyOS](https://jyywiki.cn/)
 * [oStep](https://github.com/remzi-arpacidusseau/ostep-translations/tree/master/chinese)
