@@ -87,6 +87,7 @@ ComposerService::ComposerService()
 
 ![](https://s2.loli.net/2024/08/15/jbyuokKalAYFrXx.png)
 
+
 这样app端通过SurfaceComposerClient与surfaceflinger建立了连接。
 ![](https://s2.loli.net/2024/08/15/zgq9PIHufZYwsSU.png)
 
