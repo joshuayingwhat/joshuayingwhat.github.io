@@ -27,9 +27,7 @@ type: page
 * [Kotlin 极简教程](https://www.bookstack.cn/read/EasyKotlin/README.md)
 
 ### C/C++
-* [c菜鸟教程](https://www.runoob.com/cprogramming/c-tutorial.html)
-* [c tutorial](https://www.tutorialspoint.com/cprogramming/index.htm)
-* [c语言中文网](http://c.biancheng.net/)
+* [c程序设计语言](https://github.com/joshuayingwhat/ebooks/blob/main/C%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E8%AF%AD%E8%A8%80%EF%BC%88%E7%AC%AC2%E7%89%88%C2%B7%E6%96%B0%E7%89%88%EF%BC%89.pdf)
 * [learncpp](https://www.learncpp.com/)
 * [cppreference](https://zh.cppreference.com/w/%E9%A6%96%E9%A1%B5)
 * [wscschool](https://www.w3cschool.cn/cpp/)
