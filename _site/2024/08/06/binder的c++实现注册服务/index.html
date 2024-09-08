@@ -334,7 +334,7 @@
                    <span class="k">return</span> <span class="nb">NULL</span><span class="p">;</span>
             <span class="p">}</span>
             <span class="c1">//当handle值所对应的IBinder不存在或弱引用无效时，则创建BpBinder对象【见小节3.4】</span>
-            <span class="n">b</span> <span class="o">=</span> <span class="k">new</span> <span class="nf">BpBinder</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
+            <span class="n">b</span> <span class="o">=</span> <span class="k">new</span> <span class="n">BpBinder</span><span class="p">(</span><span class="n">handle</span><span class="p">);</span>
             <span class="n">e</span><span class="o">-&gt;</span><span class="n">binder</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
             <span class="k">if</span> <span class="p">(</span><span class="n">b</span><span class="p">)</span> <span class="n">e</span><span class="o">-&gt;</span><span class="n">refs</span> <span class="o">=</span> <span class="n">b</span><span class="o">-&gt;</span><span class="n">getWeakRefs</span><span class="p">();</span>
             <span class="n">result</span> <span class="o">=</span> <span class="n">b</span><span class="p">;</span>
@@ -403,7 +403,7 @@
         <span class="p">...</span>
     <span class="p">}</span>
     <span class="c1">//【见小节3.2.3】</span>
-    <span class="k">return</span> <span class="nf">finish_flatten_binder</span><span class="p">(</span><span class="n">binder</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">out</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">finish_flatten_binder</span><span class="p">(</span><span class="n">binder</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">out</span><span class="p">);</span>
 <span class="p">}</span>
 </code></pre></div></div>
 <p>将binder实体扁平化</p>
@@ -523,7 +523,7 @@
         <span class="n">tr</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">ptr</span><span class="p">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">ipcData</span><span class="p">();</span> <span class="c1">//mData</span>
         <span class="n">tr</span><span class="p">.</span><span class="n">offsets_size</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">ipcObjectsCount</span><span class="p">()</span><span class="o">*</span><span class="k">sizeof</span><span class="p">(</span><span class="n">binder_size_t</span><span class="p">);</span> <span class="c1">//mObjectsSize</span>
         <span class="n">tr</span><span class="p">.</span><span class="n">data</span><span class="p">.</span><span class="n">ptr</span><span class="p">.</span><span class="n">offsets</span> <span class="o">=</span> <span class="n">data</span><span class="p">.</span><span class="n">ipcObjects</span><span class="p">();</span> <span class="c1">//mObjects</span>
-    <span class="p">}</span> <span class="k">else</span> <span class="nf">if</span> <span class="p">(</span><span class="n">statusBuffer</span><span class="p">)</span> <span class="p">{</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">statusBuffer</span><span class="p">)</span> <span class="p">{</span>
         <span class="p">...</span>
     <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
         <span class="k">return</span> <span class="p">(</span><span class="n">mLastError</span> <span class="o">=</span> <span class="n">err</span><span class="p">);</span>
@@ -636,44 +636,59 @@ BpInterface———&gt;BpServiceManager</p>
         
         
         
-        
-                
-                
-                
-        
-        
-        
-        
-                
-                
-                
-        
-        
-        
-        
-                
-                
-                
-        
-        
-        
-        
-                
-                
-                
-        
-        
-        
-        
-                
-                
-                
-        
-        
-        
           <h2 id="similar_posts">Similar Posts</h2>
             <ul>
                 
+                <li class="relatedPost">
+                    <a href="/2024/09/08/binder%E7%B3%BB%E7%BB%9F%E6%83%85%E6%99%AF%E5%88%86%E6%9E%90-%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">二:binder驱动情景分析—数据结构
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+         
                 <li class="relatedPost">
                     <a href="/2024/07/23/binder%E6%A1%86%E6%9E%B6framework%E5%88%86%E6%9E%90/">九:binder框架framework分析
                         
@@ -719,13 +734,6 @@ BpInterface———&gt;BpServiceManager</p>
                 
                 
                 
-                
-                
-                
-        
-        
-        
-        
                 
                 
                 

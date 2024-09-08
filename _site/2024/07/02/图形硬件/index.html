@@ -250,7 +250,7 @@ IAllocator 的具体实现在pasthrough.cpp</p>
 
 <p>Allocator.allocate</p>
 
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>AllocatorImpl.allocateBuffers
+<div class="highlighter-rouge"><div class="highlight"><pre class="highlight"><code>AllocatorImpl.allocateBuffers
 
     Gralloc0HalImpl.allocateOneBuffer.alloc
 
@@ -332,16 +332,16 @@ IAllocator 的具体实现在pasthrough.cpp</p>
 <span class="k">class</span> <span class="nc">HwcLoader</span> <span class="p">{</span>
    <span class="nl">public:</span>
     <span class="k">static</span> <span class="n">IComposer</span><span class="o">*</span> <span class="n">load</span><span class="p">()</span> <span class="p">{</span>
-        <span class="k">const</span> <span class="n">hw_module_t</span><span class="o">*</span> <span class="k">module</span> <span class="o">=</span> <span class="n">loadModule</span><span class="p">();</span>
-        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">module</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">const</span> <span class="n">hw_module_t</span><span class="o">*</span> <span class="n">module</span> <span class="o">=</span> <span class="n">loadModule</span><span class="p">();</span>
+        <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">module</span><span class="p">)</span> <span class="p">{</span>
             <span class="k">return</span> <span class="nb">nullptr</span><span class="p">;</span>
         <span class="p">}</span>
-        <span class="k">auto</span> <span class="n">hal</span> <span class="o">=</span> <span class="n">createHalWithAdapter</span><span class="p">(</span><span class="k">module</span><span class="p">);</span>
+        <span class="k">auto</span> <span class="n">hal</span> <span class="o">=</span> <span class="n">createHalWithAdapter</span><span class="p">(</span><span class="n">module</span><span class="p">);</span>
         <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">hal</span><span class="p">)</span> <span class="p">{</span>
             <span class="k">return</span> <span class="nb">nullptr</span><span class="p">;</span>
         <span class="p">}</span>
 
-        <span class="k">return</span> <span class="nf">createComposer</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">hal</span><span class="p">));</span>
+        <span class="k">return</span> <span class="n">createComposer</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="n">hal</span><span class="p">));</span>
     <span class="p">}</span>
 </code></pre></div></div>
 <p>加载模块；</p>
@@ -452,6 +452,13 @@ hwc的hwc2onfbadapter收到请求后，调用framebuffer的fb_post将帧缓冲�
         
         
         
+        
+                
+                
+                
+        
+        
+        
           <h2 id="similar_posts">Similar Posts</h2>
             <ul>
                 
@@ -530,13 +537,6 @@ hwc的hwc2onfbadapter收到请求后，调用framebuffer的fb_post将帧缓冲�
                 
                 
                 
-                
-                
-                
-        
-        
-        
-        
                 
                 
                 

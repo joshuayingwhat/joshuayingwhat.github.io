@@ -6,15 +6,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <title>十:匿名binder</title>
-    <meta name="description" content="匿名binder是要依托于实名binder而存在的。当服务端通过实名binder向客户端传输一个匿名binder，客户端端会接收到一个匿名binder的引用然后可以向位于匿名binder进程发送数据。在内核层匿名binder通过实名binder发送给驱动后，驱动会检查当前的flat_binder_obj是否在当前...">
+    <title>二:binder驱动情景分析—数据结构</title>
+    <meta name="description" content="server端在binder中提供的服务会以一个binder_node的结构存储在binder驱动中。">
 
     <link rel="shortcut icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="icon" href="/favicon.ico?" type="image/x-icon">
     <link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://at.alicdn.com/t/font_8v3czwksspqlg14i.css">
     <link rel="stylesheet" href="/css/main.css ">
-    <link rel="canonical" href="http://localhost:4000/2024/07/08/%E5%8C%BF%E5%90%8Dbinder/">
+    <link rel="canonical" href="http://localhost:4000/2024/09/08/binder%E7%B3%BB%E7%BB%9F%E6%83%85%E6%99%AF%E5%88%86%E6%9E%90-%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
     <link rel="alternate" type="application/rss+xml" title="joshuayingwhat" href="http://localhost:4000/feed.xml ">
 
 
@@ -108,11 +108,11 @@
 
         <div class="page clearfix" post>
     <div class="left">
-        <h1>十:匿名binder</h1>
+        <h1>二:binder驱动情景分析—数据结构</h1>
         <div class="label">
 
             <div class="label-card">
-                <i class="fa fa-calendar"></i>2024-07-08
+                <i class="fa fa-calendar"></i>2024-09-08
             </div>
 
             <div class="label-card">
@@ -161,35 +161,80 @@
         </div>
         <hr>
         <article itemscope itemtype="http://schema.org/BlogPosting">
-            
-<p><img src="https://s2.loli.net/2024/07/23/SaEgVCqjOdJsuyN.png" alt="" />
-匿名binder是要依托于实名binder而存在的。
-当服务端通过实名binder向客户端传输一个匿名binder，客户端端会接收到一个匿名binder的引用然后可以向位于匿名binder进程发送数据。
-在内核层匿名binder通过实名binder发送给驱动后，驱动会检查当前的flat_binder_obj是否在当前进程有binder_node。</p>
+            <ul id="markdown-toc">
+  <li><a href="#数据传输过程" id="markdown-toc-数据传输过程">数据传输过程</a></li>
+  <li><a href="#数据如何复制" id="markdown-toc-数据如何复制">数据如何复制</a></li>
+</ul>
+
+<p><img src="https://s2.loli.net/2024/09/08/P3GnuVsLU2JHAiW.png" alt="" />
+server端在binder中提供的服务会以一个binder_node的结构存储在binder驱动中。</p>
 
 <p>……</p>
 
-<p><img src="https://s2.loli.net/2024/07/23/CPEfGAiWaDtqyOo.png" alt="" />
-如果没有binder就创建一个binder_node指向当前进程，同时也会在clinet进程创建一个binder_ref。
-<img src="https://s2.loli.net/2024/07/23/WK6mL8yJ4Ta7Gw5.png" alt="" />
-这个binder_ref指向刚才创建的binder_node。这样client通过binder_ref就可以获取到刚才的匿名binder的引用。</p>
-<table><tr><td bgcolor="red">android系统中启动ActvityThread中的ApplicationThread。这个ApplicationThread就是一个匿名binder。</td></tr></table>
+<p>server传入一个flag_binder_object给驱动在内核驱动里会为每个服务创建一个binder_node。binder_node中有一个proc，binder_node.proc = server.
+<img src="https://s2.loli.net/2024/09/08/hN7I3GeRVOFzstX.png" alt="" />
+servicemanager在内核驱动创建binder_ref,引用binder_node.其中binder_ref.desc = 1,2,3,….在用户态创建服务链表其中服务的名字.name，还有服务的handle == 就等于desc中的描述
+<img src="https://s2.loli.net/2024/09/08/mYOeHV8iPdvjRTM.png" alt="" />
+client程序向servicemanager查询服务，传一个服务的名称name。</p>
 
-<p><img src="https://s2.loli.net/2024/07/23/M8hBzAgTxNsd452.png" alt="" />
-<img src="https://s2.loli.net/2024/07/23/u3Fp1VqjWPyancb.png" alt="" />
+<p>servicemanager返回一个handle，是返回给内核态驱动程序</p>
+
+<p>驱动程序在servicemanager的binder_ref中根据handle找到binder_ref,再根据binder_ref.node找到binder_node。最后给client创建新的binder_ref,其中desc从1开始,驱动返回desc给client，它即为handle</p>
+
+<p><strong><font color="red">handle是进程A对进程B提供的服务s的引用,驱动程序会通过handle找到目的进程</font></strong>
+client程序发送数据给handle：驱动里面根据handle找到binder_ref，再根据binder_ref找到binder_node，根据binder_node然后再通过binder_proc找到server进程。
+<img src="https://s2.loli.net/2024/09/08/vbNEUOmP12iLuZT.png" alt="" />
+<img src="https://s2.loli.net/2024/09/08/ImDlaWdMFYfUjyq.png" alt="" />
+<strong><font color="red">注释：客户端想要访问到server中的服务需要在驱动中通过一个binder_ref的结构指向到binder_node这样才能知道具体服务，而client端会有一个handle（这个handle就是client端通过查询servicemanager获取到的，handle就是指向的server）通过handle找到binder_ref，在根据binder_ref找到binder_node,根据binder_node找到server进程。</font></strong></p>
+
+<h1 id="数据传输过程">数据传输过程</h1>
+<p><strong>client——&gt; server</strong></p>
+
+<p>1.client首先要构造数据，然后调用ioctl发数据</p>
+
+<p>2.驱动里根据handle最终可以找到server进程</p>
+
+<p>3.把数据放入进程的binder_proc.todo，然后唤醒server</p>
+
+<p>4.休眠</p>
+
+<p>5.被唤醒</p>
+
+<p>6.从todo链表取出数据，返回用户空间</p>
+
+<p><strong>server端</strong></p>
+
+<p>1.先读，后休眠</p>
+
+<ol>
+  <li>被唤醒</li>
+  <li>从todo链表取出数据，返回用户空间</li>
+  <li>处理</li>
+  <li>把结果写给client，放入client的binder_proc.todo，顺便把client程序唤醒</li>
+</ol>
+
+<h1 id="数据如何复制">数据如何复制</h1>
+<p>binder方法：</p>
+
+<p>1.server mmap：server程序的用户态可以直接访问驱动中某块buffer。</p>
+
+<p>2.client程序构造数据，驱动copy_from_user将数据从用户态拷贝到内核态。</p>
+
+<p>3.server程序可以在用户态直接使用数据，因此只需要一次拷贝。</p>
+
+<p><strong><font color="red">数据复制一次针对的是数据本身，对于数据头还是需要复制2次。</font></strong>
 <br />
-其中mgr就是ams在app client端的代理。通过这个实名binder把我们的匿名binder传给ams中。</p>
+<br />
+<br />
+<br />
+<br />
+<br />
+参考:<br />
+<a href="https://blog.csdn.net/freekiteyu/article/details/70082302">https://blog.csdn.net/freekiteyu/article/details/70082302</a><br /></p>
 
-<p>参考连接:<br />
-<a href="https://skytoby.github.io/2020/%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3Binder%E6%9C%BA%E5%88%B64-bindService%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/">https://skytoby.github.io/2020/深入理解Binder机制4-bindService过程分析/</a></p>
+<p><a href="http://gityuan.com/2015/10/31/binder-prepare/">http://gityuan.com/2015/10/31/binder-prepare/</a></p>
 
-<p><a href="https://www.jianshu.com/p/45563980bf61">https://www.jianshu.com/p/45563980bf61</a></p>
-
-<p><a href="https://blog.csdn.net/tkwxty/article/details/108343847">https://blog.csdn.net/tkwxty/article/details/108343847</a></p>
-
-<p><a href="https://www.jianshu.com/p/0de4c4017052">https://www.jianshu.com/p/0de4c4017052</a></p>
-
-<p><a href="https://yuandaimaahao.github.io/AndroidFrameworkTutorialPages/003.%E5%AD%A6%E7%A9%BFBinder%E7%AF%87/030.Binder%20%E5%8C%BF%E5%90%8D%E6%9C%8D%E5%8A%A1%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90.html">https://yuandaimaahao.github.io/AndroidFrameworkTutorialPages/003.学穿Binder篇/030.Binder 匿名服务源码分析.html</a></p>
+<p><a href="https://weishu.me/2016/01/12/binder-index-for-newer/">https://weishu.me/2016/01/12/binder-index-for-newer/</a></p>
 
         </article>
         <hr>
@@ -199,52 +244,37 @@
         
         
         
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
+        
+                
+                
+                
+        
+        
+        
           <h2 id="similar_posts">Similar Posts</h2>
             <ul>
                 
-                <li class="relatedPost">
-                    <a href="/2024/09/08/binder%E7%B3%BB%E7%BB%9F%E6%83%85%E6%99%AF%E5%88%86%E6%9E%90-%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">二:binder驱动情景分析—数据结构
-                        
-                    </a>
-                </li>
-                
-                
-                
-                
-                
-                
-        
-        
-        
-        
-                
-                
-                
-        
-        
-        
-        
-                
-                
-                
-        
-        
-        
-        
-                
-                
-                
-        
-        
-        
-        
-                
-                
-                
-        
-        
-        
-         
                 <li class="relatedPost">
                     <a href="/2024/08/06/binder%E7%9A%84c++%E5%AE%9E%E7%8E%B0%E6%B3%A8%E5%86%8C%E6%9C%8D%E5%8A%A1/">七:binder的C++实现注册服务
                         
@@ -269,6 +299,21 @@
          
                 <li class="relatedPost">
                     <a href="/2024/07/23/binder%E6%A1%86%E6%9E%B6framework%E5%88%86%E6%9E%90/">九:binder框架framework分析
+                        
+                    </a>
+                </li>
+                
+                
+                
+                
+                
+                
+        
+        
+        
+         
+                <li class="relatedPost">
+                    <a href="/2024/07/08/%E5%8C%BF%E5%90%8Dbinder/">十:匿名binder
                         
                     </a>
                 </li>
@@ -307,13 +352,11 @@
             <div class="post-recent">
     <div class="pre">
         
-        <p><strong>上一篇</strong> <a href="/2024/07/02/%E5%9B%BE%E5%BD%A2%E7%A1%AC%E4%BB%B6/">一:图形硬件(Gralloc,Hardware Composer)</a></p>
+        <p><strong>上一篇</strong> <a href="/2024/08/15/app%E4%B8%8Esurfaceflinger%E5%BB%BA%E7%AB%8B%E8%BF%9E%E6%8E%A5/">四:APP与surfaceflinger服务连接过程</a></p>
         
     </div>
     <div class="nex">
 
-        
-        <p><strong>下一篇</strong> <a href="/2024/07/23/binder%E6%A1%86%E6%9E%B6framework%E5%88%86%E6%9E%90/">九:binder框架framework分析</a></p>
         
     </div>
 </div>

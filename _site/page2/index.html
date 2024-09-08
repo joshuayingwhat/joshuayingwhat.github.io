@@ -117,6 +117,100 @@
       
       <li>
         <h2>
+          <a class="post-link" href="/2024/06/12/binder%E6%A1%86%E6%9E%B6%E7%B3%BB%E7%BB%9F%E5%88%86%E6%9E%90/">一:Binder系统框架分析</a>
+        </h2>
+        <div class="label">
+          <div class="label-card">
+            <i class="fa fa-calendar"></i>2024-06-12
+          </div>
+          <div class="label-card">
+            
+          </div>
+          <div class="label-card">
+            
+          </div>
+
+          <div class="label-card">
+            
+
+
+<!-- <span class="point">•</span> -->
+<span class="categories">
+  <i class="fa fa-th-list"></i>
+  
+    
+        <a href="/category/#android" title="Category: android" rel="category">android</a>
+    
+  
+
+  <!-- <span class="point">•</span> -->
+</span>
+
+
+          </div>
+
+          <div class="label-card">
+            
+<!-- <span class="point">•</span> -->
+<span class="pageTag">
+  <i class="fa fa-tags"></i>
+  
+    
+        <a href="/tag/#binder" title="Tag: binder" rel="tag">binder</a>
+    
+  
+
+</span>
+
+          </div>
+        </div>
+        <div class="excerpt">
+          <ul id="markdown-toc">
+  <li><a href="#rpc通信远程函数调用" id="markdown-toc-rpc通信远程函数调用"><strong>rpc通信:远程函数调用</strong></a></li>
+  <li><a href="#clientbctestsvcmgr_lookup" id="markdown-toc-clientbctestsvcmgr_lookup"><strong>client（bctest.svcmgr_lookup）</strong></a></li>
+</ul>
+
+<p>整个binder框架有2部分组成一个是ipc通信一个是rpc通讯.
+ipc通信机制的一般套路</p>
+
+<p>源：a(client)</p>
+
+<p>目的：b  (server)</p>
+<ol>
+<li>b向servicemanager注册xx服务</li>
+<li>a向servicemanager查询xx服务，得到一个handle（handle就是指向的进程b）</li>
+</ol>
+<p>数据本身:数据就是一个buffer，char[512] buffer</p>
+
+<h3 id="rpc通信远程函数调用"><strong>rpc通信:远程函数调用</strong></h3>
+<ol>
+<li>调用哪一个函数：server的函数编个号</li>
+
+<li>传给它什么参数：传递server的参数就放在ipc的buffer中</li>
+
+<li>返回值：同样也是通过buffer传给client</li>
+</ol>
+<h3 id="clientbctestsvcmgr_lookup"><strong>client（bctest.svcmgr_lookup）</strong></h3>
+<ol>
+<li>open驱动</li>
+<li>获取服务：向servicemanager查询服务得到一个指向目标进程的handle（这个handle就是目标进程server），target = 0 （表示目标进程是servicemanager）name就是client想要调用的服务 （函数）</li>
+</ol>
+
+<p><img src="https://raw.githubusercontent.com/joshuayingwhat/blog_resource/main/image/bctest.c.png" alt="" /></p>
+
+<p>同时SVC_MGR_GET_SERVICE也会被调用
+通过handle发送数据，这个时候就会导致server从驱动中读取到数据</p>
+
+
+        </div>
+        <div class="read-all">
+          <a href="/2024/06/12/binder%E6%A1%86%E6%9E%B6%E7%B3%BB%E7%BB%9F%E5%88%86%E6%9E%90/"><i class="fa fa-newspaper-o"></i>Read All</a>
+        </div>
+        <hr>
+      </li>
+      
+      <li>
+        <h2>
           <a class="post-link" href="/2017/10/15/point_array__array_point/">指针数组和数组指针基础</a>
         </h2>
         <div class="label">
@@ -204,6 +298,8 @@
         </div>
         <ul class="content-ul" recent>
           
+          <li><a href="/2024/09/08/binder%E7%B3%BB%E7%BB%9F%E6%83%85%E6%99%AF%E5%88%86%E6%9E%90-%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">二:binder驱动情景分析—数据结构</a></li>
+          
           <li><a href="/2024/08/15/app%E4%B8%8Esurfaceflinger%E5%BB%BA%E7%AB%8B%E8%BF%9E%E6%8E%A5/">四:APP与surfaceflinger服务连接过程</a></li>
           
           <li><a href="/2024/08/09/view%E7%BB%98%E5%88%B6/">三:view绘制</a></li>
@@ -221,8 +317,6 @@
           <li><a href="/2024/07/08/%E5%8C%BF%E5%90%8Dbinder/">十:匿名binder</a></li>
           
           <li><a href="/2024/07/02/%E5%9B%BE%E5%BD%A2%E7%A1%AC%E4%BB%B6/">一:图形硬件(Gralloc,Hardware Composer)</a></li>
-          
-          <li><a href="/2024/06/12/binder%E6%A1%86%E6%9E%B6%E7%B3%BB%E7%BB%9F%E5%88%86%E6%9E%90/">一:Binder系统框架分析</a></li>
           
         </ul>
       </div>
@@ -251,7 +345,7 @@
               <span class="name">
                 android
               </span>
-              <span class="badge">10</span>
+              <span class="badge">11</span>
             </a>
           </li>
           
@@ -270,7 +364,7 @@
                   <a href="/tag/#C基础"
             style="font-size: 9pt; color: #999;">C基础</a>
                   <a href="/tag/#binder"
-            style="font-size: 14.5pt; color: #444;">binder</a>
+            style="font-size: 16pt; color: #222;">binder</a>
                   <a href="/tag/#显示"
             style="font-size: 18pt; color: #000;">显示</a>
             
