@@ -87,6 +87,27 @@ ComposerService::ComposerService()
 
 ![](https://s2.loli.net/2024/08/15/jbyuokKalAYFrXx.png)
 
+调用createconnection来请求surfaceflinger服务创建一个连接，创建一个类型为client的binder对象，并且将这个binder对象的代理接口conn返回。surfacecomposeclient类获得了surfaceflinger服务返回来的client代理接口conn后将其保存到自己的成员变量mClient中，这样应用程序就可以通过它来请求surfaceflinger创建和渲染surface了。
+
+```java
+Client::Client(const sp<SurfaceFlinger>& flinger)
+    : mFlinger(flinger), mNameGenerator(1)
+{
+}
+Client::~Client()
+{
+    const size_t count = mLayers.size();
+    for (size_t i=0 ; i<count ; i++) {
+        sp<LayerBaseClient> layer(mLayers.valueAt(i).promote());
+        if (layer != 0) {
+            mFlinger->removeLayer(layer);
+        }
+    }
+}
+```
+Client类有两个成员变量mFlinger和mNameGenerator，它们的类型分别为sp<SurfaceFlinger>和int32_t，前者指向了SurfaceFlinger服务，而后者用来生成SurfaceFlinger服务为Android应用程序所创建的每一个Surface的名称。例如，假设一个Android应用程序请求SurfaceFlinger创建了两个Surface，那么第一个Surface的名称就由数字1来描述，而第二个Surface就由数字2来描述，依次类推。
+
+![image.png](https://s2.loli.net/2024/09/29/8wiJLet4FvM6s1f.png)
 
 这样app端通过SurfaceComposerClient与surfaceflinger建立了连接。
 ![](https://s2.loli.net/2024/08/15/zgq9PIHufZYwsSU.png)
@@ -95,10 +116,14 @@ ComposerService::ComposerService()
 <li>2. 在onFirstRef函数中，SurfaceComposerClient通过IServiceManager::getService方法拿到了SurfaceFlinger系统的代理端BpSurfaceComposer。接口马上通过BpSurfaceComposer向SurfaceFlinger发起connect请求（Bp向Bn发起请求动作）。</li>
 <ol>a. SurfaceFlinger接收到请求后，在本地创建一个本地代理对象Client（这是ClientBnSurfaceComposerClient端的），然后将该对象以ISrufaceComposerClient的形式返回给BpSurfaceComposer；</ol>
 <ol>b. BpSurfaceComposer接收到SurfaceFlinger返回过来的Client对象后，通过ISurfaceComposerClient::asInterface函数将Client对象转换成BpSurfaceComposerClient对象。</ol>
-<li>3. SurfaceComposerClient::onFirstRef函数执行完后，APP就与SurfaceFlinger服务成功建立连接了，后面就可以通过这个SurfaceFlinger的Client Proxy与SurfaceFlinger进行正常的通信。</li>
+<li>3. SurfaceComposerClient::onFirstRef函数执行完后，APP就与SurfaceFlinger服务成功建立连接了，后面就可以通过这个SurfaceFlinger的Client Proxy与SurfaceFlinger进行正常的通信。</li><br>
 
+**<font color='red'>为什么有ISurfaceComposer还需要有Client?</font>**<br>
+ISurfaceComposer是一个制定client和server的标准接口虽然也可以获取到surfaceflinger的实例，但是如果有多个实例就会有多个surfaceflinger不易维护资源管理混乱增加系统开销
 
-参考:
+而通过client的实例则可以让应用层创建多个client每个client又对应一个surface，因此一个应用可以有多个client对应的surface
+
+参考:<br>
 <https://www.jianshu.com/p/6964157c2615>
 
 <https://blog.csdn.net/lijie2664989/article/details/115300781>

@@ -98,8 +98,6 @@
                 
                     
                 
-                    
-                
             </ul>
         </nav>
     </div>
@@ -236,6 +234,27 @@
 
 <p><img src="https://s2.loli.net/2024/08/15/jbyuokKalAYFrXx.png" alt="" /></p>
 
+<p>调用createconnection来请求surfaceflinger服务创建一个连接，创建一个类型为client的binder对象，并且将这个binder对象的代理接口conn返回。surfacecomposeclient类获得了surfaceflinger服务返回来的client代理接口conn后将其保存到自己的成员变量mClient中，这样应用程序就可以通过它来请求surfaceflinger创建和渲染surface了。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nl">Client:</span><span class="o">:</span><span class="nc">Client</span><span class="o">(</span><span class="kd">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="nc">SurfaceFlinger</span><span class="o">&gt;&amp;</span> <span class="n">flinger</span><span class="o">)</span>
+    <span class="o">:</span> <span class="n">mFlinger</span><span class="o">(</span><span class="n">flinger</span><span class="o">),</span> <span class="n">mNameGenerator</span><span class="o">(</span><span class="mi">1</span><span class="o">)</span>
+<span class="o">{</span>
+<span class="o">}</span>
+<span class="nl">Client:</span><span class="o">:~</span><span class="nc">Client</span><span class="o">()</span>
+<span class="o">{</span>
+    <span class="kd">const</span> <span class="n">size_t</span> <span class="n">count</span> <span class="o">=</span> <span class="n">mLayers</span><span class="o">.</span><span class="na">size</span><span class="o">();</span>
+    <span class="k">for</span> <span class="o">(</span><span class="n">size_t</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span> <span class="o">;</span> <span class="n">i</span><span class="o">&lt;</span><span class="n">count</span> <span class="o">;</span> <span class="n">i</span><span class="o">++)</span> <span class="o">{</span>
+        <span class="n">sp</span><span class="o">&lt;</span><span class="nc">LayerBaseClient</span><span class="o">&gt;</span> <span class="nf">layer</span><span class="o">(</span><span class="n">mLayers</span><span class="o">.</span><span class="na">valueAt</span><span class="o">(</span><span class="n">i</span><span class="o">).</span><span class="na">promote</span><span class="o">());</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">layer</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">mFlinger</span><span class="o">-&gt;</span><span class="n">removeLayer</span><span class="o">(</span><span class="n">layer</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+<p>Client类有两个成员变量mFlinger和mNameGenerator，它们的类型分别为sp<SurfaceFlinger>和int32_t，前者指向了SurfaceFlinger服务，而后者用来生成SurfaceFlinger服务为Android应用程序所创建的每一个Surface的名称。例如，假设一个Android应用程序请求SurfaceFlinger创建了两个Surface，那么第一个Surface的名称就由数字1来描述，而第二个Surface就由数字2来描述，依次类推。</SurfaceFlinger></p>
+
+<p><img src="https://s2.loli.net/2024/09/29/8wiJLet4FvM6s1f.png" alt="image.png" /></p>
+
 <p>这样app端通过SurfaceComposerClient与surfaceflinger建立了连接。
 <img src="https://s2.loli.net/2024/08/15/zgq9PIHufZYwsSU.png" alt="" /></p>
 
@@ -244,8 +263,14 @@
 <ol>a. SurfaceFlinger接收到请求后，在本地创建一个本地代理对象Client（这是ClientBnSurfaceComposerClient端的），然后将该对象以ISrufaceComposerClient的形式返回给BpSurfaceComposer；</ol>
 <ol>b. BpSurfaceComposer接收到SurfaceFlinger返回过来的Client对象后，通过ISurfaceComposerClient::asInterface函数将Client对象转换成BpSurfaceComposerClient对象。</ol>
 <li>3. SurfaceComposerClient::onFirstRef函数执行完后，APP就与SurfaceFlinger服务成功建立连接了，后面就可以通过这个SurfaceFlinger的Client Proxy与SurfaceFlinger进行正常的通信。</li>
+<p><br /></p>
 
-<p>参考:
+<p><strong><font color="red">为什么有ISurfaceComposer还需要有Client?</font></strong><br />
+ISurfaceComposer是一个制定client和server的标准接口虽然也可以获取到surfaceflinger的实例，但是如果有多个实例就会有多个surfaceflinger不易维护资源管理混乱增加系统开销</p>
+
+<p>而通过client的实例则可以让应用层创建多个client每个client又对应一个surface，因此一个应用可以有多个client对应的surface</p>
+
+<p>参考:<br />
 <a href="https://www.jianshu.com/p/6964157c2615">https://www.jianshu.com/p/6964157c2615</a></p>
 
 <p><a href="https://blog.csdn.net/lijie2664989/article/details/115300781">https://blog.csdn.net/lijie2664989/article/details/115300781</a></p>
