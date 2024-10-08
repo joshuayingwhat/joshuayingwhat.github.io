@@ -47,6 +47,7 @@ type: page
 * [AndroidTechAndPerf](https://www.androidperformance.com/)
 * [Gityuan](http://gityuan.com/)
 * [Stan_Z](https://www.jianshu.com/u/7f26e9b13731)
+* [王哥的技术栈](https://www.jianshu.com/u/fd0b722ce11f)
 ### 图形显示系统
 * [夕月风](https://www.jianshu.com/c/6e16319d0fd2)
 # 报刊 #
